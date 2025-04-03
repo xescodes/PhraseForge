@@ -43,7 +43,6 @@
             text-align: center;
             margin-bottom: 30px;
         }
-
         /* Nueva clase para la imagen del título */
         .title-icon {
             vertical-align: middle; /* Alinea verticalmente con el texto */
@@ -51,7 +50,6 @@
             height: auto; /* Mantén la proporción de aspecto */
             margin-right: 5px; /* Espacio entre la imagen y el texto */
         }
-
         /* Form Elements */
         .form-group {
             margin-bottom: 20px;
@@ -147,12 +145,10 @@
 </head>
 <body>
     <div class="container">
-        <!-- Título con imagen -->
         <h1>
-            <img src="D20.gif" alt="D20 Die" class="title-icon">
+            <img src="./index14_files/D20.gif" alt="D20" class="title-icon">
             Phrase Forge
         </h1>
-
         <p>Generate high-quality text in multiple styles and languages using AI. Adjust the slider for the desired length of the *next* generation. Results are appended below.</p>
         <div class="input-section">
             <div class="form-group">
@@ -217,11 +213,14 @@
     </div>
     <script>
         // --- Configuration ---
-        const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-        const API_KEY = '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';
-        const MODEL = 'deepseek/deepseek-chat';
+        // --- NUEVOS VALORES ---
+        const API_URL = 'https://openrouter.ai/api/v1/chat/completions'; // URL actualizada para OpenRouter
+        const API_KEY = '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'; // Tu API Key
+        const MODEL = 'google/gemini-2.5-pro-exp-03-25:free'; // Tu modelo
+        // --- FIN NUEVOS VALORES ---
+
         const MAX_HISTORY_ITEMS = 20;
-        const DEFAULT_MAX_TOKENS = 4000;
+        const DEFAULT_MAX_TOKENS = 4000; // Considera si necesitas ajustar esto para Gemini
 
         // --- DOM Elements ---
         const promptEl = document.getElementById('prompt');
@@ -246,40 +245,33 @@
         function updateLengthDisplay() {
             lengthValueEl.textContent = `${lengthEl.value} words`;
         }
-
         function showLoading(isLoading) {
             loadingEl.style.display = isLoading ? 'block' : 'none';
             generateBtn.disabled = isLoading;
             errorMessageEl.style.display = 'none';
             warningMessageEl.style.display = 'none';
         }
-
         function showError(message) {
             errorMessageEl.textContent = `Error: ${message}`;
             errorMessageEl.style.display = 'block';
             warningMessageEl.style.display = 'none';
         }
-
         function showWarning(message) {
             warningMessageEl.textContent = `Warning: ${message}`;
             warningMessageEl.style.display = 'block';
             errorMessageEl.style.display = 'none';
         }
-
         function loadHistory() {
             const history = getHistoryFromStorage();
             displayHistory(history);
         }
-
         function getHistoryFromStorage() {
             const storedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
             return storedHistory ? JSON.parse(storedHistory) : [];
         }
-
         function saveHistoryToStorage(history) {
             localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
         }
-
         function addToHistory(item) {
             const history = getHistoryFromStorage();
             history.unshift(item); // Add new item to the beginning
@@ -289,8 +281,7 @@
             saveHistoryToStorage(history);
             displayHistory(history); // Update the displayed history
         }
-
-        function displayHistory(history) {
+         function displayHistory(history) {
             historyListEl.innerHTML = ''; // Clear current display
             if (history.length === 0) {
                 historyListEl.innerHTML = '<p>No individual generations recorded yet.</p>';
@@ -305,50 +296,68 @@
                 const timestamp = new Date(item.timestamp).toLocaleString();
                 const escapeHtml = (unsafe) => {
                     if (!unsafe) return '';
-                    return unsafe.replace(/&/g, "&amp;").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+                    // Simple HTML escaping
+                    return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
                 };
-                const truncatedIndicator = item.finish_reason === 'length' ? '<span style="color:orange; font-size:0.8em;"> (Might be truncated)</span>' : '';
+
+                // Check if item exists and has properties before accessing them
+                const promptSnippet = item && item.prompt ? escapeHtml(item.prompt.substring(0, 100)) + (item.prompt.length > 100 ? '...' : '') : '[No Prompt]';
+                const resultSnippet = item && item.result ? escapeHtml(item.result.substring(0, 150)) + (item.result.length > 150 ? '...' : '') : '[No Result]';
+                const style = item && item.style ? escapeHtml(item.style) : 'N/A';
+                const language = item && item.language ? escapeHtml(item.language) : 'N/A';
+                const lengthReq = item && item.length ? item.length : 'N/A';
+                const finishReason = item ? item.finish_reason : null;
+
+                const truncatedIndicator = finishReason === 'length' ? '<span style="color:orange; font-size:0.8em;"> (Might be truncated)</span>' : '';
+
                 // Display snippet and metadata
                 div.innerHTML = `
-                    <strong>Prompt:</strong> ${escapeHtml(item.prompt.substring(0, 100))}${item.prompt.length > 100 ? '...' : ''}
-                    <p><strong>Result Snippet:</strong> ${escapeHtml(item.result.substring(0, 150))}${item.result.length > 150 ? '...' : ''}${truncatedIndicator}</p>
-                    <div class="history-meta">Style: ${escapeHtml(item.style)} | Language: ${escapeHtml(item.language)} | Length Req: ${item.length} words | ${timestamp}</div>
+                    <strong>Prompt:</strong> ${promptSnippet}
+                    <p><strong>Result Snippet:</strong> ${resultSnippet}${truncatedIndicator}</p>
+                    <div class="history-meta">Style: ${style} | Language: ${language} | Length Req: ${lengthReq} words | ${timestamp}</div>
                 `;
+
                 // Add click listener to load this history item back into the form/result area
                 div.addEventListener('click', () => {
-                    const historyItem = getHistoryFromStorage()[index]; // Get the full item from storage
+                    const allHistory = getHistoryFromStorage();
+                    const historyItem = allHistory[index]; // Get the full item from storage using the index
                     if (historyItem) {
                         // Update inputs to reflect the settings of the clicked history item
-                        promptEl.value = historyItem.prompt;
-                        styleEl.value = historyItem.style;
-                        languageEl.value = historyItem.language;
-                        lengthEl.value = historyItem.length;
+                        promptEl.value = historyItem.prompt || ''; // Use default empty string if undefined
+                        styleEl.value = historyItem.style || 'Narrative'; // Default or check if exists
+                        languageEl.value = historyItem.language || 'English'; // Default or check if exists
+                        lengthEl.value = historyItem.length || 150; // Default or check if exists
                         updateLengthDisplay(); // Update the slider display
+
                         // OVERWRITE result area with the specific history item's result
-                        resultEl.value = historyItem.result;
-                        exportBtn.disabled = false; // Enable buttons as there is content now
-                        clearResultBtn.disabled = false;
+                        resultEl.value = historyItem.result || ''; // Use default empty string if undefined
+                        exportBtn.disabled = !historyItem.result; // Enable if there's result content
+                        clearResultBtn.disabled = !historyItem.result;
+
                         // Show warning if the generation was potentially cut short
                         if (historyItem.finish_reason === 'length') {
                             showWarning("This loaded text might have been truncated due to length limits in the original generation.");
                         } else {
                             warningMessageEl.style.display = 'none'; // Clear warning otherwise
                         }
+                        errorMessageEl.style.display = 'none'; // Clear errors too
+
                         // Scroll to the result area for convenience
-                        window.scrollTo({ top: resultEl.offsetTop - 20, behavior: 'smooth' });
+                         window.scrollTo({ top: resultEl.closest('.result-section').offsetTop - 20, behavior: 'smooth' });
+                    } else {
+                         console.error("Could not retrieve history item for index:", index);
+                         showError("Failed to load the selected history item.");
                     }
                 });
                 historyListEl.appendChild(div);
             });
         }
-
         function clearHistory() {
             if (confirm('Are you sure you want to clear the entire generation history? This cannot be undone.')) {
                 localStorage.removeItem(HISTORY_STORAGE_KEY);
                 loadHistory(); // Reload to show empty history and update button state
             }
         }
-
         function exportText() {
             const textToExport = resultEl.value;
             if (!textToExport) {
@@ -365,28 +374,36 @@
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
-
         function clearResultArea() {
             resultEl.value = ''; // Clear the text area
             exportBtn.disabled = true; // Disable export button
             clearResultBtn.disabled = true; // Disable clear button itself
             warningMessageEl.style.display = 'none'; // Hide any warnings
-            errorMessageEl.style.display = 'none';
+            errorMessageEl.style.display = 'none'; // Hide any errors
         }
-
         async function generateText() {
             const userPrompt = promptEl.value.trim();
             const selectedStyle = styleEl.value;
             const selectedLanguage = languageEl.value;
             const targetLength = lengthEl.value;
+
             if (!userPrompt) {
                 showError("Please enter a prompt.");
                 return;
             }
+             if (!API_KEY || API_KEY === 'YOUR_API_KEY_HERE' || !API_KEY.startsWith('sk-or-v1')) {
+                 showError("Invalid API Key format or placeholder detected. Please check the API_KEY constant in the script.");
+                 return;
+            }
+
             showLoading(true);
-            exportBtn.disabled = true; // Disable buttons during generation
-            clearResultBtn.disabled = true;
-            const fullPrompt = `
+            exportBtn.disabled = true; // Assume disabled until success
+            clearResultBtn.disabled = true; // Assume disabled until success
+
+            // Construct the prompt message for the API
+             const systemMessage = `You are Phrase Forge, an AI assistant specialized in generating text based on user specifications. Follow the instructions precisely. Respond ONLY with the requested text in the specified language. Do not add greetings, apologies, or self-references unless part of the requested text.`;
+
+            const userMessageContent = `
 Generate a text according to these specifications:
 - **TASK**: Write a text based on the user's prompt.
 - **USER PROMPT**: "${userPrompt}"
@@ -396,75 +413,129 @@ Generate a text according to these specifications:
 **IMPORTANT INSTRUCTIONS**:
 1. Aim for a total word count **close to ${targetLength} words**, but prioritize **natural completion** of sentences and thoughts over strictly hitting the exact number.
 2. Ensure the text flows well and **concludes properly** with a finished sentence or idea. Do not cut off mid-sentence unless you absolutely run out of allowed generation length.
-3. Respond **only** with the generated text itself, in the requested language (${selectedLanguage}). Do not include any introductory phrases like "Here is the text:", meta-commentary, apologies, or explanations unless the prompt explicitly asks for them.
+3. Respond **only** with the generated text itself, in the requested language (${selectedLanguage}).
 `;
             let finishReason = null; // To store why the generation stopped
+
             try {
+                 // Check if Referer and Title headers are needed and valid
+                 const referer = typeof window !== 'undefined' ? window.location.href : 'http://localhost/phraseforge/unknown';
+                 const title = typeof document !== 'undefined' ? document.title || 'Phrase Forge' : 'Phrase Forge';
+
+
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${API_KEY}`,
                         'Content-Type': 'application/json',
-                        'HTTP-Referer': window.location.href || 'http://localhost/phraseforge',
-                        'X-Title': 'Phrase Forge',
+                         // OpenRouter requires these headers
+                         'HTTP-Referer': referer,
+                         'X-Title': title,
                     },
                     body: JSON.stringify({
                         model: MODEL,
-                        messages: [{"role": "user", "content": fullPrompt}],
-                        max_tokens: DEFAULT_MAX_TOKENS
+                        messages: [
+                            {"role": "system", "content": systemMessage }, // Optional system message
+                            {"role": "user", "content": userMessageContent}
+                        ],
+                        max_tokens: DEFAULT_MAX_TOKENS // Ensure this is appropriate for the model and expected output length
+                        // Consider adding other parameters like temperature, top_p if needed
                     }),
                 });
+
                 if (!response.ok) {
                     let errorData;
+                    let errorText = `Request failed with status ${response.status} ${response.statusText}.`;
                     try {
+                        // Try to parse specific error from OpenRouter/API provider
                         errorData = await response.json();
+                         console.error("API Error Response Data:", errorData);
+                         // Extract a more specific message if available
+                         const detail = errorData?.error?.message || JSON.stringify(errorData.error);
+                         if (detail) {
+                           errorText += ` Details: ${detail}`;
+                         }
+                         // Specific check for common OpenRouter key issues
+                         if (response.status === 401) {
+                            errorText += " Check if your API Key is valid and has funds/credits.";
+                         }
+                          if (response.status === 429) {
+                             errorText += " Rate limit exceeded. Please wait and try again.";
+                          }
+
                     } catch (e) {
-                        errorData = { error: { message: `Request failed with status ${response.status} ${response.statusText}. Unable to parse error body.` } };
+                         // If parsing fails, use the raw status text
+                         console.error("Failed to parse error JSON:", e);
+                         // Optionally try to read raw text response
+                         try {
+                             const rawError = await response.text();
+                             console.error("Raw API Error Response:", rawError);
+                             errorText += ` Raw Response: ${rawError.substring(0, 200)}${rawError.length > 200 ? '...' : ''}`;
+                         } catch (textErr) {
+                            console.error("Failed to read raw error text:", textErr);
+                         }
                     }
-                    console.error("API Error Response:", errorData);
-                    throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorData.error?.message || 'Unknown API error'}`);
+                     throw new Error(errorText);
                 }
+
                 const data = await response.json();
-                if (data.choices && data.choices.length > 0) {
-                    finishReason = data.choices[0].finish_reason;
+                 console.log("API Success Response:", data); // Log success data
+
+                // Standard OpenAI/OpenRouter format check
+                if (data.choices && data.choices.length > 0 && data.choices[0].message?.content) {
+                     finishReason = data.choices[0].finish_reason || 'unknown'; // Get finish reason
                     console.log('Finish Reason:', finishReason);
-                    if (data.choices[0].message?.content) {
-                        const generatedText = data.choices[0].message.content.trim();
-                        if (resultEl.value === '') {
-                            resultEl.value = generatedText;
-                        } else {
-                            resultEl.value += "\n" + generatedText;
-                        }
-                        resultEl.scrollTop = resultEl.scrollHeight;
-                        exportBtn.disabled = false;
-                        clearResultBtn.disabled = false;
-                        if (finishReason === 'length') {
-                            showWarning("The generated text might have been cut short due to length limits. Consider using a shorter length request or simplifying the prompt.");
-                        }
-                        addToHistory({
-                            prompt: userPrompt, style: selectedStyle, language: selectedLanguage, length: targetLength,
-                            result: generatedText,
-                            timestamp: new Date().toISOString(), finish_reason: finishReason
-                        });
+                    const generatedText = data.choices[0].message.content.trim();
+
+                    // Append result
+                    if (resultEl.value === '') {
+                        resultEl.value = generatedText;
                     } else {
-                        throw new Error("API response received, but generated content is missing.");
+                        // Add two newlines for better separation between appended results
+                        resultEl.value += "\n\n" + generatedText;
                     }
+                     resultEl.scrollTop = resultEl.scrollHeight; // Scroll to bottom
+
+                    // Enable buttons now that there's content
+                    exportBtn.disabled = false;
+                    clearResultBtn.disabled = false;
+
+                    // Show warning if truncated
+                    if (finishReason === 'length' || finishReason === 'max_tokens') { // Check common reasons
+                        showWarning(`The generated text might have been cut short (Reason: ${finishReason}). Consider increasing max_tokens or adjusting the prompt/length request.`);
+                    } else {
+                         warningMessageEl.style.display = 'none'; // Clear previous warnings
+                    }
+
+                    // Add to history
+                    addToHistory({
+                        prompt: userPrompt, style: selectedStyle, language: selectedLanguage, length: targetLength,
+                        result: generatedText,
+                        timestamp: new Date().toISOString(),
+                        finish_reason: finishReason, // Store the finish reason
+                        modelUsed: data.model // Optionally store the exact model string returned by API
+                    });
+
                 } else {
+                     // Handle cases where response structure is unexpected
                     console.error("Unexpected API response structure:", data);
-                    throw new Error("Received an unexpected or empty response format from the API.");
+                     throw new Error("API response received, but generated content (choices[0].message.content) is missing or in an unexpected format.");
                 }
+
             } catch (error) {
-                console.error("Error during text generation:", error);
-                showError(error.message || "An unexpected error occurred. Check the console for details.");
-                exportBtn.disabled = resultEl.value === '';
-                clearResultBtn.disabled = resultEl.value === '';
+                 console.error("Error during text generation fetch/processing:", error);
+                 // Display a user-friendly error, potentially masking technical details
+                 showError(error.message || "An unexpected error occurred. Check the browser console (F12) for technical details.");
+                 // Keep buttons disabled if the result area is still empty
+                 exportBtn.disabled = resultEl.value === '';
+                 clearResultBtn.disabled = resultEl.value === '';
             } finally {
                 showLoading(false);
-                exportBtn.disabled = resultEl.value === '';
-                clearResultBtn.disabled = resultEl.value === '';
+                 // Ensure button states are correct based on final resultEl content
+                 exportBtn.disabled = resultEl.value === '';
+                 clearResultBtn.disabled = resultEl.value === '';
             }
         }
-
         // --- Event Listeners ---
         lengthEl.addEventListener('input', updateLengthDisplay);
         generateBtn.addEventListener('click', generateText);
@@ -475,10 +546,11 @@ Generate a text according to these specifications:
         // --- Initial Setup ---
         document.addEventListener('DOMContentLoaded', () => {
             updateLengthDisplay();
-            loadHistory();
-            const initialText = resultEl.value;
-            exportBtn.disabled = initialText === '';
-            clearResultBtn.disabled = initialText === '';
+            loadHistory(); // Load history first
+             // Set initial button states based on whether result area has content *after* potential history load
+             const initialText = resultEl.value;
+             exportBtn.disabled = initialText === '';
+             clearResultBtn.disabled = initialText === '';
         });
     </script>
 </body>
