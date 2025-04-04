@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phrase Forge</title>
@@ -144,14 +144,12 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" bis_skin_checked="1">
         <h1>
-            <img src="index_files/D20.gif" alt="icon" class="title-icon">
+            <img src="Phrase%20Forge_files/D20.gif" alt="icon" class="title-icon">
             Phrase Forge
         </h1>
-        <p>Generate high-quality text in multiple styles and languages 
-using AI. Adjust the slider for the desired length of the *next* 
-generation. Results are appended below.</p>
+        <p>Generate high-quality text in multiple styles and languages using AI. Adjust the slider for the desired length of the *next* generation. Results are appended below.</p>
         <div class="input-section">
             <div class="form-group">
                 <label for="prompt">Enter Your Prompt:</label>
@@ -164,7 +162,7 @@ generation. Results are appended below.</p>
                     <option value="Informal">Informal</option>
                     <option value="Persuasive">Persuasive</option>
                     <option value="Descriptive">Descriptive</option>
-                    <option value="Narrative" selected="selected">Narrative</option>
+                    <option value="Narrative" selected>Narrative</option>
                     <option value="Technical">Technical</option>
                     <option value="Humorous">Humorous</option>
                     <option value="Poetic">Poetic</option>
@@ -174,7 +172,7 @@ generation. Results are appended below.</p>
             <div class="form-group">
                 <label for="language">Language:</label>
                 <select id="language">
-                    <option value="English" selected="selected">English</option>
+                    <option value="English" selected>English</option>
                     <option value="Spanish">Spanish</option>
                     <option value="Catalan">Catalan</option>
                     <option value="French">French</option>
@@ -194,7 +192,7 @@ generation. Results are appended below.</p>
                     <span id="length-value">150 words</span>
                 </div>
             </div>
-            <button id="generate-btn">Generate &amp; Append Text</button>
+            <button id="generate-btn">Generate & Append Text</button>
             <div id="loading">Generating... Please Wait...</div>
             <div id="error-message"></div>
             <div id="warning-message"></div>
@@ -203,118 +201,25 @@ generation. Results are appended below.</p>
             <h2>Result Area</h2>
             <textarea id="result" placeholder="AI-generated text will be appended here..."></textarea>
             <div class="button-group">
-                <button id="export-btn" disabled="disabled">Export as .txt</button>
-                <button id="clear-result-btn" disabled="disabled">Clear</button>
+                <button id="export-btn" disabled>Export as .txt</button>
+                <button id="clear-result-btn" disabled>Clear</button>
             </div>
         </div>
         <div class="history-section">
             <h2>Generation History (Individual Generations)</h2>
-            <div id="history-list"><div class="history-item" data-index="0">
-                    <strong>Prompt:</strong> ACTÚA COM Hulk I EXPLICA EL SEGÜENT CAS A UNA PSICÒLOGA DES DEL PUNT DE VISTA DEL PACIENT
-
-Francesc ...
-                    <p><strong>Result Snippet:</strong> Doc… HULK</p>
-                    <div class="history-meta">Style: Narrative | Language: English | Length Req: 150 words | 4/3/2025, 4:31:24 PM</div>
-                </div><div class="history-item" data-index="1">
-                    <strong>Prompt:</strong> ACTÚA COM ALEISTER CROWLEY I EXPLICA A UNA PSICÒLOGA EL SEGÜENT CAS COM SI FOS TEU
-
-Francesc Adrià P...
-                    <p><strong>Result Snippet:</strong> Escolti, senyoreta... psicòloga, diu? Bé, suposo que fins i tot Ments Superiors com la meva poden trobar alguna utilitat en desgranar les febleses de ...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 2:44:17 PM</div>
-                </div><div class="history-item" data-index="2">
-                    <strong>Prompt:</strong> ACTÚA COM SWAMP THING I EXPLICA A UNA PSICÒLOGA EL SEGÜENT CAS COM SI FOS TEU
-
-Francesc Adrià Perell...
-                    <p><strong>Result Snippet:</strong> (El subjecte, una figura massiva composta de matèria vegetal, s’acomoda amb dificultat a la cadira, les fulles i les branques cruixint lleugerament. L...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 2:41:11 PM</div>
-                </div><div class="history-item" data-index="3">
-                    <strong>Prompt:</strong> ACTÚA COM ETHAN HUNT (PROTAGONISTA DE MISSION: IMPOSSIBLE) I EXPLICA A UNA PSICÒLOGA EL SEGÜENT EL S...
-                    <p><strong>Result Snippet:</strong> Doctora, gràcies per rebre'm. Sóc aquí perquè... bé, la meva situació és complexa. És com una missió a llarg termini que ha anat presentant complicaci...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 2:34:39 PM</div>
-                </div><div class="history-item" data-index="4">
-                    <strong>Prompt:</strong> ACTÚA COM TONY MANERO (PROTAGONISTA DE SATURDAY NIGHT FEVER) I EXPLICA A UNA PSICÒLOGA EL SEGÜENT EL...
-                    <p><strong>Result Snippet:</strong> Escolta, "doctora"... o com sigui que et diguis. No sé ben bé què dimonis hi faig aquí, saps? Normalment, sóc jo qui fa moure la gent a la pista, no q...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 2:27:28 PM</div>
-                </div><div class="history-item" data-index="5">
-                    <strong>Prompt:</strong> ACTÚA COM TONY MANERO I EXPLICA A UNA PSICÒLOGA EL SEGÜENT EL SEGÜENT CAS COM SI FOS TEU
-
-Francesc A...
-                    <p><strong>Result Snippet:</strong> Mira, doctora, jo no sé ben bé per què soc aquí, saps? Però m'han dit que potser vostè m'entén. La cosa és... fa un munt d'anys, allà pel 96, em van d...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 2:25:21 PM</div>
-                </div><div class="history-item" data-index="6">
-                    <strong>Prompt:</strong> ACTÚA COM ART EL PAYASSO I EXPLICA A UNA PSICÒLOGA EL SEGÜENT EL SEGÜENT CAS COM SI FOS TEU
-
-Frances...
-                    <p><strong>Result Snippet:</strong> (Amb una veu rasposa, interrompuda per rialletes silencioses i inquietants, mentre fa gestos exagerats i lleugerament amenaçadors amb les mans)
-
-Miri,...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 2:21:59 PM</div>
-                </div><div class="history-item" data-index="7">
-                    <strong>Prompt:</strong> ACTÚA COM PLATÓ I EXPLICA A UNA PSICÒLOGA EL SEGÜENT EL SEGÜENT CAS COM SI FOS TEU
-
-Francesc Adrià P...
-                    <p><strong>Result Snippet:</strong> Estimada col·lega de l'ànima, permeteu-me que us parli no com el filòsof que cerca la veritat immutable, sinó com un home atrapat en les vicissituds d...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 2:17:44 PM</div>
-                </div><div class="history-item" data-index="8">
-                    <strong>Prompt:</strong> ACTÚA COM PLATÓ I EXPLICA EL SEGÜENT EL SEGÜENT CAS A UNA PSICÒLOGA DES DEL PUNT DE VISTA DEL PACIEN...
-                    <p><strong>Result Snippet:</strong> Benvolguda col·lega de l'ànima, permeteu-me que us exposi una situació que, com un ressò de la nostra caverna, il·lustra la dolorosa escletxa entre el...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 2:05:42 PM</div>
-                </div><div class="history-item" data-index="9">
-                    <strong>Prompt:</strong> ACTÚA COM PLATÓ I EXPLICA EL SEGÜENT EL SEGÜENT CAS A UNA PSICÒLOGA DES DEL PUNT DE VISTA DEL PACIEN...
-                    <p><strong>Result Snippet:</strong> Benvolguda col·lega de l'ànima, permeteu-me que us exposi la situació d'en Francesc Adrià Perelló, un home la lluita del qual il·lustra dolorosament l...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 2:00:07 PM</div>
-                </div><div class="history-item" data-index="10">
-                    <strong>Prompt:</strong> estàs explicant l'experiència personal d'un home afectat per EM des dels 19 anys 
-(ara en té 49: Fra...
-                    <p><strong>Result Snippet:</strong> Jo sóc en Francesc. O potser només el recipient que alberga aquesta… cosa. Fa tres dècades. Trenta anys des que l'univers va decidir que el meu cos se...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 1:21:38 PM</div>
-                </div><div class="history-item" data-index="11">
-                    <strong>Prompt:</strong> estàs explicant l'experiència personal d'un home afectat per EM des dels 19 anys 
-(ara en té 49: Fra...
-                    <p><strong>Result Snippet:</strong> Escolta, tio. Fa trenta anys. Trenta! Que porto aquest rotllo a sobre. Va començar quan tenia dinou, imagina't, l'edat de menjar-se el món, de ser el ...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 1:10:31 PM</div>
-                </div><div class="history-item" data-index="12">
-                    <strong>Prompt:</strong> estàs explicant l'experiència personal d'un home afectat per EM des dels 19 anys (ara en té 49: Fran...
-                    <p><strong>Result Snippet:</strong> Collons, tio... trenta anys ja. Trenta anys amb aquesta... cosa... enganxada a sobre, com una balada lenta quan vols fotre-</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 12:22:26 PM</div>
-                </div><div class="history-item" data-index="13">
-                    <strong>Prompt:</strong> estàs explicant l'experiència personal d'un home afectat per EM des dels 19 anys (ara en té 49: Fran...
-                    <p><strong>Result Snippet:</strong> Fa ja tres dècades, trenta llargs anys, que aquesta taca, aquesta corrupció que anomenen malaltia, va arrelar dins meu. No com una llavor, sinó com un...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 12:06:48 PM</div>
-                </div><div class="history-item" data-index="14">
-                    <strong>Prompt:</strong> estàs explicant l'experiència personal d'un home afectat per EM des dels 19 anys (ara en té 49: Fran...
-                    <p><strong>Result Snippet:</strong> Fa tres dècades que el sagni de la meva pròpia medul·la s'ha espessit, transformant-se en una ombra viva dins meu. No una metàfora, no, sinó una presè...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 12:05:09 PM</div>
-                </div><div class="history-item" data-index="15">
-                    <strong>Prompt:</strong> estàs explicant l'experiència personal d'un home afectat per EM des dels 19 anys (ara en té 49: Fran...
-                    <p><strong>Result Snippet:</strong> Respirava l'aire del 94, jo, un xitxarel·lo de dinou anys, quan el món va decidir ballar-me una giga als ulls. Vertigen, li diuen els metges amb bates...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 11:43:54 AM</div>
-                </div><div class="history-item" data-index="16">
-                    <strong>Prompt:</strong> estàs explicant l'experiència personal d'un home afectat per EM des dels 19 anys (ara en té 49: Fran...
-                    <p><strong>Result Snippet:</strong> Fa trenta anys, sí, trenta, que aquesta… cosa, diguem-ne *la Cosa*, va decidir fer-se un lloc a dins meu. No com un òrgan nou, no, Déu me’n guard, sin...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 11:40:08 AM</div>
-                </div><div class="history-item" data-index="17">
-                    <strong>Prompt:</strong> estàs explicant l'experiència personal d'un home afectat per EM des dels 19 anys (ara en té 49), ho ...
-                    <p><strong>Result Snippet:</strong> Fa trenta anys, sí, tres dècades que ballo aquest tango maldestre amb una companya invisible, o potser massa visible, una mena de boira espessa, com s...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 11:37:24 AM</div>
-                </div><div class="history-item" data-index="18">
-                    <strong>Prompt:</strong> estàs explicant l'experiència personal d'un home afectat per EM des dels 19 anys (ara en té 49), ho ...
-                    <p><strong>Result Snippet:</strong> Fa trenta anys que porto dins aquesta mena de... núvol personal. No un d'aquests blancs i esponjosos que fan els poetes, no. Un núvol gris marengo, am...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 11:28:13 AM</div>
-                </div><div class="history-item" data-index="19">
-                    <strong>Prompt:</strong> estàs explicant l'experiència personal d'un home afectat per EM des dels 19 anys (ara en té 49), ho ...
-                    <p><strong>Result Snippet:</strong> Fa ara trenta anys, o potser una mica més, quan la meva joventut tot just començava a perfilar-se als dinou anys, vaig començar a percebre una presènc...</p>
-                    <div class="history-meta">Style: Narrative | Language: Catalan | Length Req: 500 words | 4/3/2025, 11:21:30 AM</div>
-                </div></div>
+            <div id="history-list"></div>
             <button id="clear-history-btn">Clear History</button>
         </div>
     </div>
     <script>
         // --- Configuration ---
         // --- NUEVOS VALORES ---
-        const API_URL = 'https://openrouter.ai/api/v1/chat/completions'; // URL actualizada para OpenRouter
-        const API_KEY = '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'; // Tu API Key
-        const MODEL = 'google/gemini-2.5-pro-exp-03-25:free'; // Tu modelo
+        // --- Configuration ---
+// --- NUEVOS VALORES ---
+const API_URL = 'https://openrouter.ai/api/v1/chat/completions'; // URL actualizada para OpenRouter
+const API_KEY = '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'; // Tu API Key
+const MODEL = 'qwen/qwq-32b:free'; // Tu modelo
+// --- FIN NUEVOS VALORES ---
         // --- FIN NUEVOS VALORES ---
 
         const MAX_HISTORY_ITEMS = 20;
@@ -651,5 +556,5 @@ Generate a text according to these specifications:
              clearResultBtn.disabled = initialText === '';
         });
     </script>
-
-</body></html>
+</body>
+</html>
