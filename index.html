@@ -42,13 +42,47 @@
         h1 {
             text-align: center;
             margin-bottom: 30px;
+            display: flex; /* Use flexbox for alignment */
+            align-items: center; /* Center items vertically */
+            justify-content: center; /* Center items horizontally */
         }
-        /* Nueva clase para la imagen del título */
+        /* Style for the inline SVG icon */
         .title-icon {
-            vertical-align: middle; /* Alinea verticalmente con el texto */
-            width: 40px; /* Ajusta el tamaño de la imagen */
-            height: auto; /* Mantén la proporción de aspecto */
-            margin-right: 5px; /* Espacio entre la imagen y el texto */
+            width: 40px; /* Adjust size as needed */
+            height: 40px;
+            margin-right: 10px; /* Space between icon and text */
+            fill: currentColor; /* Use the surrounding text color */
+        }
+        /* API Key Section */
+        .api-key-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+        .api-key-section label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .api-key-section input[type="password"],
+        .api-key-section input[type="text"] { /* Allow switching type */
+            width: calc(100% - 85px); /* Adjust width to fit button */
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-right: 5px;
+            box-sizing: border-box;
+        }
+        .api-key-section button {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            vertical-align: baseline;
+        }
+        #api-key-status {
+            font-size: 0.9em;
+            margin-top: 5px;
+            color: var(--secondary-color);
         }
         /* Form Elements */
         .form-group {
@@ -110,6 +144,11 @@
         #result {
             min-height: 200px; /* Slightly larger default size */
             background-color: #e9ecef; font-family: monospace; white-space: pre-wrap; word-wrap: break-word;
+            border: 1px solid var(--border-color); /* Added border */
+            border-radius: 4px; /* Added border radius */
+            padding: 10px; /* Added padding */
+            width: 100%; /* Ensure it takes full width */
+            box-sizing: border-box; /* Include padding/border in width */
         }
         #history-list {
             max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); padding: 15px; border-radius: 4px; background-color: #f8f9fa;
@@ -136,6 +175,8 @@
             .container { padding: 15px; }
             h1 { font-size: 1.8em; }
             h2 { font-size: 1.4em; }
+            .api-key-section input[type="password"],
+            .api-key-section input[type="text"] { width: calc(100% - 90px); /* Adjust for smaller screens */ }
             .length-container { flex-direction: column; align-items: flex-start; }
             .length-container input[type="range"] { width: 100%; margin-right: 0; margin-bottom: 5px; }
             #length-value { margin-left: 0; margin-top: 5px; }
@@ -144,12 +185,32 @@
     </style>
 </head>
 <body>
-    <div class="container" bis_skin_checked="1">
+    <div class="container">
         <h1>
-            <img src="Phrase%20Forge_files/D20.gif" alt="icon" class="title-icon">
+            <svg class="title-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 16V8C21 6.89543 20.1046 6 19 6H5C3.89543 6 3 6.89543 3 8V16C3 17.1046 3.89543 18 5 18H19C20.1046 18 21 17.1046 21 16Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="8.5" cy="12" r="1.5" fill="currentColor"/>
+                <circle cx="15.5" cy="12" r="1.5" fill="currentColor"/>
+            </svg>
             Phrase Forge
         </h1>
+
+        <div class="api-key-section">
+            <label for="api-key-input">OpenRouter API Key:</label>
+            <div>
+                <input type="password" id="api-key-input" placeholder="Enter your OpenRouter API Key (sk-or-v1-...)">
+                <button id="save-key-btn">Save Key</button>
+                <button id="clear-key-btn">Clear Key</button>
+            </div>
+            <div id="api-key-status">Enter your key to enable generation. Key is saved in local storage.</div>
+             <p style="font-size: 0.8em; margin-top: 5px;">
+                Get your key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">OpenRouter</a>.
+                Phrase Forge requires a valid key to generate text.
+            </p>
+        </div>
+
         <p>Generate high-quality text in multiple styles and languages using AI. Adjust the slider for the desired length of the *next* generation. Results are appended below.</p>
+
         <div class="input-section">
             <div class="form-group">
                 <label for="prompt">Enter Your Prompt:</label>
@@ -192,14 +253,13 @@
                     <span id="length-value">150 words</span>
                 </div>
             </div>
-            <button id="generate-btn">Generate & Append Text</button>
-            <div id="loading">Generating... Please Wait...</div>
+            <button id="generate-btn" disabled>Generate & Append Text</button> <div id="loading">Generating... Please Wait...</div>
             <div id="error-message"></div>
             <div id="warning-message"></div>
         </div>
         <div class="result-section">
             <h2>Result Area</h2>
-            <textarea id="result" placeholder="AI-generated text will be appended here..."></textarea>
+            <textarea id="result" placeholder="Enter your API key above, then generate text. AI-generated text will be appended here..."></textarea>
             <div class="button-group">
                 <button id="export-btn" disabled>Export as .txt</button>
                 <button id="clear-result-btn" disabled>Clear</button>
@@ -208,24 +268,22 @@
         <div class="history-section">
             <h2>Generation History (Individual Generations)</h2>
             <div id="history-list"></div>
-            <button id="clear-history-btn">Clear History</button>
-        </div>
+            <button id="clear-history-btn" disabled>Clear History</button> </div>
     </div>
     <script>
         // --- Configuration ---
-        // --- NUEVOS VALORES ---
-        // --- Configuration ---
-// --- NUEVOS VALORES ---
-const API_URL = 'https://openrouter.ai/api/v1/chat/completions'; // URL actualizada para OpenRouter
-const API_KEY = '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'; // Tu API Key
-const MODEL = 'qwen/qwq-32b:free'; // Tu modelo
-// --- FIN NUEVOS VALORES ---
-        // --- FIN NUEVOS VALORES ---
-
+        const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+        const MODEL = 'mistralai/mistral-7b-instruct:free'; // Using a free model as default
         const MAX_HISTORY_ITEMS = 20;
-        const DEFAULT_MAX_TOKENS = 4000; // Considera si necesitas ajustar esto para Gemini
+        const DEFAULT_MAX_TOKENS = 1024; // Adjusted default max tokens
+        const API_KEY_STORAGE_KEY = 'phraseForgeApiKey';
+        const HISTORY_STORAGE_KEY = 'phraseForgeHistory';
 
         // --- DOM Elements ---
+        const apiKeyInput = document.getElementById('api-key-input');
+        const saveKeyBtn = document.getElementById('save-key-btn');
+        const clearKeyBtn = document.getElementById('clear-key-btn');
+        const apiKeyStatus = document.getElementById('api-key-status');
         const promptEl = document.getElementById('prompt');
         const styleEl = document.getElementById('style');
         const languageEl = document.getElementById('language');
@@ -241,36 +299,101 @@ const MODEL = 'qwen/qwq-32b:free'; // Tu modelo
         const historyListEl = document.getElementById('history-list');
         const clearHistoryBtn = document.getElementById('clear-history-btn');
 
-        // --- Local Storage Key ---
-        const HISTORY_STORAGE_KEY = 'phraseForgeHistory';
+        // --- State ---
+        let currentApiKey = null;
 
         // --- Functions ---
+
+        // --- API Key Management ---
+        function loadApiKey() {
+            const storedKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+            if (storedKey) {
+                currentApiKey = storedKey;
+                apiKeyInput.value = currentApiKey; // Show the key in the input (masked)
+                apiKeyStatus.textContent = 'API Key loaded from local storage.';
+                apiKeyStatus.style.color = 'var(--success-color)';
+                generateBtn.disabled = false; // Enable generation if key exists
+            } else {
+                apiKeyStatus.textContent = 'Enter your OpenRouter API Key to enable generation.';
+                apiKeyStatus.style.color = 'var(--secondary-color)';
+                generateBtn.disabled = true; // Disable generation if no key
+            }
+        }
+
+        function saveApiKey() {
+            const key = apiKeyInput.value.trim();
+            if (key && key.startsWith('sk-or-v1-')) { // Basic validation
+                currentApiKey = key;
+                localStorage.setItem(API_KEY_STORAGE_KEY, currentApiKey);
+                apiKeyStatus.textContent = 'API Key saved successfully!';
+                apiKeyStatus.style.color = 'var(--success-color)';
+                generateBtn.disabled = false; // Enable generation
+                 errorMessageEl.style.display = 'none'; // Clear previous errors
+            } else {
+                showError("Invalid API Key format. It should start with 'sk-or-v1-'.");
+                generateBtn.disabled = true; // Keep disabled if key is invalid
+            }
+        }
+
+        function clearApiKey() {
+            if (confirm('Are you sure you want to clear the saved API Key from local storage?')) {
+                currentApiKey = null;
+                localStorage.removeItem(API_KEY_STORAGE_KEY);
+                apiKeyInput.value = '';
+                apiKeyStatus.textContent = 'API Key cleared. Enter a key to enable generation.';
+                apiKeyStatus.style.color = 'var(--secondary-color)';
+                generateBtn.disabled = true; // Disable generation
+            }
+        }
+
+        // --- UI Updates ---
         function updateLengthDisplay() {
             lengthValueEl.textContent = `${lengthEl.value} words`;
         }
         function showLoading(isLoading) {
             loadingEl.style.display = isLoading ? 'block' : 'none';
-            generateBtn.disabled = isLoading;
-            errorMessageEl.style.display = 'none';
-            warningMessageEl.style.display = 'none';
+            // Disable form elements during loading
+            generateBtn.disabled = isLoading || !currentApiKey; // Also disable if no API key
+            promptEl.disabled = isLoading;
+            styleEl.disabled = isLoading;
+            languageEl.disabled = isLoading;
+            lengthEl.disabled = isLoading;
+            apiKeyInput.disabled = isLoading;
+            saveKeyBtn.disabled = isLoading;
+            clearKeyBtn.disabled = isLoading;
+            // Clear messages only when starting loading
+            if (isLoading) {
+                errorMessageEl.style.display = 'none';
+                warningMessageEl.style.display = 'none';
+            }
         }
         function showError(message) {
             errorMessageEl.textContent = `Error: ${message}`;
             errorMessageEl.style.display = 'block';
-            warningMessageEl.style.display = 'none';
+            warningMessageEl.style.display = 'none'; // Hide warning if error occurs
         }
         function showWarning(message) {
             warningMessageEl.textContent = `Warning: ${message}`;
             warningMessageEl.style.display = 'block';
-            errorMessageEl.style.display = 'none';
+            errorMessageEl.style.display = 'none'; // Hide error if warning occurs
         }
+
+        // --- History Management ---
         function loadHistory() {
             const history = getHistoryFromStorage();
             displayHistory(history);
+            // Enable/disable clear history button based on loaded history
+            clearHistoryBtn.disabled = history.length === 0;
         }
         function getHistoryFromStorage() {
             const storedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
-            return storedHistory ? JSON.parse(storedHistory) : [];
+            try {
+                return storedHistory ? JSON.parse(storedHistory) : [];
+            } catch (e) {
+                console.error("Error parsing history from local storage:", e);
+                localStorage.removeItem(HISTORY_STORAGE_KEY); // Clear corrupted data
+                return [];
+            }
         }
         function saveHistoryToStorage(history) {
             localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
@@ -283,6 +406,7 @@ const MODEL = 'qwen/qwq-32b:free'; // Tu modelo
             }
             saveHistoryToStorage(history);
             displayHistory(history); // Update the displayed history
+            clearHistoryBtn.disabled = false; // Ensure clear button is enabled
         }
          function displayHistory(history) {
             historyListEl.innerHTML = ''; // Clear current display
@@ -292,26 +416,29 @@ const MODEL = 'qwen/qwq-32b:free'; // Tu modelo
                 return;
             }
             clearHistoryBtn.disabled = false; // Enable clear button if history exists
+
             history.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.classList.add('history-item');
                 div.dataset.index = index; // Store index for retrieval on click
-                const timestamp = new Date(item.timestamp).toLocaleString();
+
+                // Ensure item and properties exist before accessing
+                const timestamp = item?.timestamp ? new Date(item.timestamp).toLocaleString() : 'N/A';
                 const escapeHtml = (unsafe) => {
-                    if (!unsafe) return '';
-                    // Simple HTML escaping
+                    if (typeof unsafe !== 'string') return '';
                     return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
                 };
 
-                // Check if item exists and has properties before accessing them
-                const promptSnippet = item && item.prompt ? escapeHtml(item.prompt.substring(0, 100)) + (item.prompt.length > 100 ? '...' : '') : '[No Prompt]';
-                const resultSnippet = item && item.result ? escapeHtml(item.result.substring(0, 150)) + (item.result.length > 150 ? '...' : '') : '[No Result]';
-                const style = item && item.style ? escapeHtml(item.style) : 'N/A';
-                const language = item && item.language ? escapeHtml(item.language) : 'N/A';
-                const lengthReq = item && item.length ? item.length : 'N/A';
-                const finishReason = item ? item.finish_reason : null;
+                const promptSnippet = item?.prompt ? escapeHtml(item.prompt.substring(0, 100)) + (item.prompt.length > 100 ? '...' : '') : '[No Prompt]';
+                const resultSnippet = item?.result ? escapeHtml(item.result.substring(0, 150)) + (item.result.length > 150 ? '...' : '') : '[No Result]';
+                const style = item?.style ? escapeHtml(item.style) : 'N/A';
+                const language = item?.language ? escapeHtml(item.language) : 'N/A';
+                const lengthReq = item?.length ? item.length : 'N/A';
+                const finishReason = item?.finish_reason; // Use optional chaining
 
-                const truncatedIndicator = finishReason === 'length' ? '<span style="color:orange; font-size:0.8em;"> (Might be truncated)</span>' : '';
+                const truncatedIndicator = (finishReason === 'length' || finishReason === 'max_tokens')
+                    ? '<span style="color:orange; font-size:0.8em;"> (Might be truncated)</span>'
+                    : '';
 
                 // Display snippet and metadata
                 div.innerHTML = `
@@ -326,19 +453,20 @@ const MODEL = 'qwen/qwq-32b:free'; // Tu modelo
                     const historyItem = allHistory[index]; // Get the full item from storage using the index
                     if (historyItem) {
                         // Update inputs to reflect the settings of the clicked history item
-                        promptEl.value = historyItem.prompt || ''; // Use default empty string if undefined
-                        styleEl.value = historyItem.style || 'Narrative'; // Default or check if exists
-                        languageEl.value = historyItem.language || 'English'; // Default or check if exists
-                        lengthEl.value = historyItem.length || 150; // Default or check if exists
+                        promptEl.value = historyItem.prompt || '';
+                        styleEl.value = historyItem.style || 'Narrative';
+                        languageEl.value = historyItem.language || 'English';
+                        lengthEl.value = historyItem.length || 150;
                         updateLengthDisplay(); // Update the slider display
 
                         // OVERWRITE result area with the specific history item's result
-                        resultEl.value = historyItem.result || ''; // Use default empty string if undefined
-                        exportBtn.disabled = !historyItem.result; // Enable if there's result content
+                        resultEl.value = historyItem.result || '';
+                        // Enable buttons if there's result content
+                        exportBtn.disabled = !historyItem.result;
                         clearResultBtn.disabled = !historyItem.result;
 
                         // Show warning if the generation was potentially cut short
-                        if (historyItem.finish_reason === 'length') {
+                        if (historyItem.finish_reason === 'length' || historyItem.finish_reason === 'max_tokens') {
                             showWarning("This loaded text might have been truncated due to length limits in the original generation.");
                         } else {
                             warningMessageEl.style.display = 'none'; // Clear warning otherwise
@@ -361,10 +489,12 @@ const MODEL = 'qwen/qwq-32b:free'; // Tu modelo
                 loadHistory(); // Reload to show empty history and update button state
             }
         }
+
+        // --- Result Area Management ---
         function exportText() {
             const textToExport = resultEl.value;
             if (!textToExport) {
-                alert('Nothing to export!');
+                alert('Nothing to export!'); // Simple alert is okay here
                 return;
             }
             const blob = new Blob([textToExport], { type: 'text/plain;charset=utf-8' });
@@ -384,27 +514,34 @@ const MODEL = 'qwen/qwq-32b:free'; // Tu modelo
             warningMessageEl.style.display = 'none'; // Hide any warnings
             errorMessageEl.style.display = 'none'; // Hide any errors
         }
+
+        // --- Text Generation (API Call) ---
         async function generateText() {
             const userPrompt = promptEl.value.trim();
             const selectedStyle = styleEl.value;
             const selectedLanguage = languageEl.value;
             const targetLength = lengthEl.value;
 
-            if (!userPrompt) {
-                showError("Please enter a prompt.");
+            // --- Pre-flight Checks ---
+            if (!currentApiKey) {
+                showError("API Key is missing. Please enter and save your OpenRouter API Key.");
+                // Optionally focus the API key input
+                apiKeyInput.focus();
                 return;
             }
-             if (!API_KEY || API_KEY === 'YOUR_API_KEY_HERE' || !API_KEY.startsWith('sk-or-v1')) {
-                 showError("Invalid API Key format or placeholder detected. Please check the API_KEY constant in the script.");
-                 return;
+             if (!userPrompt) {
+                showError("Please enter a prompt.");
+                promptEl.focus();
+                return;
             }
 
             showLoading(true);
-            exportBtn.disabled = true; // Assume disabled until success
-            clearResultBtn.disabled = true; // Assume disabled until success
+            // Keep result buttons disabled until generation succeeds
+            exportBtn.disabled = true;
+            clearResultBtn.disabled = true;
 
             // Construct the prompt message for the API
-             const systemMessage = `You are Phrase Forge, an AI assistant specialized in generating text based on user specifications. Follow the instructions precisely. Respond ONLY with the requested text in the specified language. Do not add greetings, apologies, or self-references unless part of the requested text.`;
+            const systemMessage = `You are Phrase Forge, an AI assistant specialized in generating text based on user specifications. Follow the instructions precisely. Respond ONLY with the requested text in the specified language. Do not add greetings, apologies, or self-references unless part of the requested text.`;
 
             const userMessageContent = `
 Generate a text according to these specifications:
@@ -421,91 +558,86 @@ Generate a text according to these specifications:
             let finishReason = null; // To store why the generation stopped
 
             try {
-                 // Check if Referer and Title headers are needed and valid
-                 const referer = typeof window !== 'undefined' ? window.location.href : 'http://localhost/phraseforge/unknown';
-                 const title = typeof document !== 'undefined' ? document.title || 'Phrase Forge' : 'Phrase Forge';
-
+                 // Determine Referer and Title, handle local file case
+                 let referer = 'http://localhost/phraseforge/unknown'; // Default fallback
+                 let title = 'Phrase Forge'; // Default fallback
+                 if (typeof window !== 'undefined' && window.location.href) {
+                     if (window.location.protocol === 'file:') {
+                         referer = 'http://localhost/phraseforge/localfile'; // Use a generic localhost for file protocol
+                     } else {
+                         referer = window.location.href;
+                     }
+                 }
+                 if (typeof document !== 'undefined' && document.title) {
+                     title = document.title;
+                 }
 
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${API_KEY}`,
+                        'Authorization': `Bearer ${currentApiKey}`, // Use the stored API key
                         'Content-Type': 'application/json',
-                         // OpenRouter requires these headers
-                         'HTTP-Referer': referer,
-                         'X-Title': title,
+                        // OpenRouter requires these headers
+                        'HTTP-Referer': referer,
+                        'X-Title': title,
                     },
                     body: JSON.stringify({
                         model: MODEL,
                         messages: [
-                            {"role": "system", "content": systemMessage }, // Optional system message
+                            {"role": "system", "content": systemMessage },
                             {"role": "user", "content": userMessageContent}
                         ],
-                        max_tokens: DEFAULT_MAX_TOKENS // Ensure this is appropriate for the model and expected output length
-                        // Consider adding other parameters like temperature, top_p if needed
+                        max_tokens: DEFAULT_MAX_TOKENS // Max tokens the model can generate
+                        // Consider adding temperature, top_p etc. if needed
                     }),
                 });
 
+                // --- Handle Response ---
                 if (!response.ok) {
                     let errorData;
-                    let errorText = `Request failed with status ${response.status} ${response.statusText}.`;
+                    let errorText = `API request failed: ${response.status} ${response.statusText}.`;
                     try {
-                        // Try to parse specific error from OpenRouter/API provider
                         errorData = await response.json();
-                         console.error("API Error Response Data:", errorData);
-                         // Extract a more specific message if available
-                         const detail = errorData?.error?.message || JSON.stringify(errorData.error);
-                         if (detail) {
-                           errorText += ` Details: ${detail}`;
-                         }
-                         // Specific check for common OpenRouter key issues
-                         if (response.status === 401) {
-                            errorText += " Check if your API Key is valid and has funds/credits.";
-                         }
-                          if (response.status === 429) {
-                             errorText += " Rate limit exceeded. Please wait and try again.";
-                          }
+                        console.error("API Error Response Data:", errorData);
+                        const detail = errorData?.error?.message || JSON.stringify(errorData.error);
+                        if (detail) { errorText += ` Details: ${detail}`; }
+                        if (response.status === 401) { errorText += " Check if your API Key is valid and has funds/credits."; }
+                        if (response.status === 429) { errorText += " Rate limit exceeded. Please wait and try again."; }
+                         if (response.status === 400 && detail && detail.includes("Invalid model")) { errorText += ` The selected model '${MODEL}' might be invalid or unavailable. Check OpenRouter documentation.`; }
+                         if (response.status === 400 && detail && detail.includes("max_tokens")) { errorText += ` The 'max_tokens' value (${DEFAULT_MAX_TOKENS}) might be too high for this model or request.`; }
 
                     } catch (e) {
-                         // If parsing fails, use the raw status text
                          console.error("Failed to parse error JSON:", e);
-                         // Optionally try to read raw text response
                          try {
                              const rawError = await response.text();
                              console.error("Raw API Error Response:", rawError);
                              errorText += ` Raw Response: ${rawError.substring(0, 200)}${rawError.length > 200 ? '...' : ''}`;
-                         } catch (textErr) {
-                            console.error("Failed to read raw error text:", textErr);
-                         }
+                         } catch (textErr) { console.error("Failed to read raw error text:", textErr); }
                     }
-                     throw new Error(errorText);
+                     throw new Error(errorText); // Throw the detailed error
                 }
 
                 const data = await response.json();
-                 console.log("API Success Response:", data); // Log success data
+                console.log("API Success Response:", data); // Log success data
 
-                // Standard OpenAI/OpenRouter format check
+                // --- Process Successful Response ---
                 if (data.choices && data.choices.length > 0 && data.choices[0].message?.content) {
-                     finishReason = data.choices[0].finish_reason || 'unknown'; // Get finish reason
+                    finishReason = data.choices[0].finish_reason || 'unknown';
                     console.log('Finish Reason:', finishReason);
                     const generatedText = data.choices[0].message.content.trim();
 
                     // Append result
-                    if (resultEl.value === '') {
-                        resultEl.value = generatedText;
-                    } else {
-                        // Add two newlines for better separation between appended results
-                        resultEl.value += "\n\n" + generatedText;
-                    }
-                     resultEl.scrollTop = resultEl.scrollHeight; // Scroll to bottom
+                    const separator = resultEl.value === '' ? '' : "\n\n---\n\n"; // Add separator between generations
+                    resultEl.value += separator + generatedText;
+                    resultEl.scrollTop = resultEl.scrollHeight; // Scroll to bottom
 
                     // Enable buttons now that there's content
                     exportBtn.disabled = false;
                     clearResultBtn.disabled = false;
 
                     // Show warning if truncated
-                    if (finishReason === 'length' || finishReason === 'max_tokens') { // Check common reasons
-                        showWarning(`The generated text might have been cut short (Reason: ${finishReason}). Consider increasing max_tokens or adjusting the prompt/length request.`);
+                    if (finishReason === 'length' || finishReason === 'max_tokens') {
+                        showWarning(`The generated text might have been cut short (Reason: ${finishReason}). Consider increasing max_tokens or adjusting the prompt/length request if the result seems incomplete.`);
                     } else {
                          warningMessageEl.style.display = 'none'; // Clear previous warnings
                     }
@@ -513,47 +645,56 @@ Generate a text according to these specifications:
                     // Add to history
                     addToHistory({
                         prompt: userPrompt, style: selectedStyle, language: selectedLanguage, length: targetLength,
-                        result: generatedText,
+                        result: generatedText, // Store only the newly generated part in history item
                         timestamp: new Date().toISOString(),
-                        finish_reason: finishReason, // Store the finish reason
-                        modelUsed: data.model // Optionally store the exact model string returned by API
+                        finish_reason: finishReason,
+                        modelUsed: data.model || MODEL // Store the model used
                     });
 
                 } else {
-                     // Handle cases where response structure is unexpected
                     console.error("Unexpected API response structure:", data);
-                     throw new Error("API response received, but generated content (choices[0].message.content) is missing or in an unexpected format.");
+                    throw new Error("API response received, but generated content (choices[0].message.content) is missing or in an unexpected format.");
                 }
 
             } catch (error) {
                  console.error("Error during text generation fetch/processing:", error);
-                 // Display a user-friendly error, potentially masking technical details
                  showError(error.message || "An unexpected error occurred. Check the browser console (F12) for technical details.");
-                 // Keep buttons disabled if the result area is still empty
+                 // Keep result buttons disabled if the result area is still empty after error
                  exportBtn.disabled = resultEl.value === '';
                  clearResultBtn.disabled = resultEl.value === '';
             } finally {
-                showLoading(false);
-                 // Ensure button states are correct based on final resultEl content
+                showLoading(false); // Ensure loading indicator is hidden and form is re-enabled
+                 // Final check on button states based on result content
                  exportBtn.disabled = resultEl.value === '';
                  clearResultBtn.disabled = resultEl.value === '';
             }
         }
+
         // --- Event Listeners ---
         lengthEl.addEventListener('input', updateLengthDisplay);
         generateBtn.addEventListener('click', generateText);
         exportBtn.addEventListener('click', exportText);
         clearResultBtn.addEventListener('click', clearResultArea);
         clearHistoryBtn.addEventListener('click', clearHistory);
+        saveKeyBtn.addEventListener('click', saveApiKey);
+        clearKeyBtn.addEventListener('click', clearApiKey);
+        // Optional: Allow saving API key by pressing Enter in the input field
+        apiKeyInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                saveApiKey();
+            }
+        });
 
         // --- Initial Setup ---
         document.addEventListener('DOMContentLoaded', () => {
+            loadApiKey(); // Load API key first
             updateLengthDisplay();
-            loadHistory(); // Load history first
-             // Set initial button states based on whether result area has content *after* potential history load
-             const initialText = resultEl.value;
-             exportBtn.disabled = initialText === '';
-             clearResultBtn.disabled = initialText === '';
+            loadHistory(); // Load history next
+            // Set initial result button states based on whether result area has content
+            const initialText = resultEl.value;
+            exportBtn.disabled = initialText === '';
+            clearResultBtn.disabled = initialText === '';
+            // Initial state for clear history button is set within loadHistory()
         });
     </script>
 </body>
