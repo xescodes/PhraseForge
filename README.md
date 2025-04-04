@@ -1,139 +1,63 @@
-# 🌟 Phrase Forge
+# ✨ Phrase Forge ✨ - El Teu Forjador de Frases Personal!
 
-> Desata el poder de la generación de texto con IA - Crea contenido único en múltiples idiomas y estilos
+Benvingut/da a **Phrase Forge**! 🧙‍♂️💨 Cansat/da de mirar una pàgina en blanc? Necessites un impuls creatiu? Aquesta petita aplicació web és aquí per ajudar-te a forjar textos increïbles amb el poder de la intel·ligència artificial! 🤖✍️
 
-Phrase Forge es una herramienta de generación de texto potente y versátil que crea contenido de alta calidad en múltiples idiomas y estilos de escritura. Utilizando tecnología avanzada de IA, genera textos coherentes y contextualmente apropiados basados en tus indicaciones.
+## 🤔 Com Funciona Aquesta Màgia?
 
-![Phrase Forge Demo](https://i.imgur.com/demo.gif)
+Phrase Forge és com tenir un aprenent d'escriptor molt llest (i digital) al teu servei. Tu li dones les ordres i ell... voilà! Crea text. Aquí teniu el procés pas a pas:
 
-## ✨ Características Principales
+1.  **🔑 El Secret Més Ben Guardat (La Clau API):**
+    * Phrase Forge utilitza l'[API d'OpenRouter](https://openrouter.ai/) per accedir a models d'IA potents.
+    * **MOLT IMPORTANT:** Perquè funcioni, **necessites la teva pròpia clau API d'OpenRouter**. Pots aconseguir-ne una gratuïtament (amb límits d'ús) a [OpenRouter Keys](https://openrouter.ai/keys).
+    * Enganxa la teva clau (hauria de començar per `sk-or-v1-...`) a la secció "OpenRouter API Key" i fes clic a "Save Key".
+    * 🔒 **Tranquil/a!** La teva clau es desa **només** al teu navegador (utilitzant `localStorage`). No s'envia a cap altre lloc ni es comparteix. Si esborres les dades del navegador o fas clic a "Clear Key", desapareixerà.
 
-### 🎨 Estilos de Escritura
-- **Formal**: Lenguaje profesional y académico
-  ```
-  Prompt: "Beneficios del ejercicio"
-  Resultado: "El ejercicio físico regular constituye un pilar fundamental para el mantenimiento óptimo de la salud..."
-  ```
+2.  **✍️ Dóna les Instruccions al Forjador:**
+    * **Enter Your Prompt:** Aquí escrius la teva idea principal. Què vols que l'IA escrigui? Sigues tan específic/a o general com vulguis! (p. ex., "Escriu un poema sobre un gat astronauta").
+    * **Writing Style:** Tria l'estil que més t'agradi (Formal, Informal, Narratiu, etc.).
+    * **Language:** Selecciona l'idioma en què vols el text resultant.
+    * **Length Slider:** Ajusta la barra lliscant per indicar la llargada aproximada (en paraules) que vols per a la *propera* generació de text.
 
-- **Informal**: Tono casual y conversacional
-  ```
-  Prompt: "Viaje a la playa"
-  Resultado: "¡No te vas a creer lo increíble que estuvo nuestro día en la playa! El sol brillaba..."
-  ```
+3.  **🚀 Forja! (Generate & Append Text):**
+    * Un cop tinguis la clau desada i les instruccions a punt, fes clic a aquest botó!
+    * L'aplicació enviarà la teva petició a l'IA (a través d'OpenRouter).
+    * ⏳ Tingues una mica de paciència mentre l'IA "forja" el text... Veureu un indicador de "Generating...".
+    * El text resultant s'afegirà a la "Result Area" de sota. Si ja hi havia text, el nou s'afegirà al final, separat per `---`.
 
-- **Persuasivo**: Argumentos convincentes
-  ```
-  Prompt: "Adoptar mascotas"
-  Resultado: "¿Te has preguntado alguna vez cómo puedes cambiar una vida para siempre? Adoptar una mascota..."
-  ```
+4.  **📜 La Teva Creació (Result Area):**
+    * Aquí s'acumula tot el text que has generat.
+    * **Export as .txt:** Descarrega tot el contingut de l'àrea de resultats com un fitxer de text simple.
+    * **Clear:** Esborra tot el text de l'àrea de resultats. Compte, no es pot desfer!
 
-### 🌍 Soporte Multilingüe
-Genera texto en 11 idiomas diferentes:
-- 🇪🇸 Español
-- 🇬🇧 English
-- 🇨🇦 Català
-- 🇫🇷 Français
-- 🇩🇪 Deutsch
-- 🇮🇹 Italiano
-- 🇵🇹 Português
-- 🇷🇺 Русский
-- 🇨🇳 中文
-- 🇯🇵 日本語
-- 🇰🇷 한국어
+## 📚 L'Historial del Forjador (Generation History)
 
-### 🎯 Casos de Uso
+Cada cop que generes un text amb èxit, es desa una "instantània" a l'historial:
 
-#### 📝 Creación de Contenido
-- Posts para blog
-- Artículos
-- Contenido para redes sociales
-- Descripciones de productos
+* Veureu una llista de les vostres generacions anteriors, amb un trosset del prompt i del resultat.
+* **Fes clic** en un element de l'historial per:
+    * Recarregar la configuració (prompt, estil, idioma, llargada) que vas utilitzar per a aquella generació.
+    * **SOBREESCRIURE** l'àrea de resultats amb el text *específic* d'aquella generació històrica (ideal per recuperar un text concret).
+* L'historial també es desa al teu navegador (`localStorage`) i té un límit (actualment, els últims 20 elements).
+* **Clear History:** Esborra tot l'historial de generacions. Compte, tampoc es pot desfer!
 
-#### ✍️ Escritura Creativa
-```
-Prompt: "Un día en el bosque" (Estilo: Poético)
-Resultado: "Entre susurros de hojas danzantes
-           y rayos de sol que filtran secretos..."
-```
+## 🛠️ Detalls Tècnics (Per als Curiosos)
 
-#### 📚 Educación
-- Ejemplos de diferentes estilos de escritura
-- Práctica de idiomas
-- Material didáctico
+* És una aplicació web **100% client-side**: Tot el codi (HTML, CSS, JavaScript) s'executa directament al teu navegador. No hi ha cap servidor nostre pel mig (excepte l'API d'OpenRouter, és clar).
+* **Model d'IA per defecte:** Utilitza `mistralai/mistral-7b-instruct:free` d'OpenRouter (un model potent i gratuït!).
+* **Emmagatzematge:** Fa servir `localStorage` del navegador per desar la teva clau API (si la proporciones) i l'historial de generacions per a la teva comoditat.
 
-## 🚀 Cómo Empezar
+## 🚀 Com Utilitzar-la
 
-1. **Abre la Aplicación**
-   - Simplemente abre `index.html` en tu navegador
-   - No requiere instalación
-
-2. **Crea tu Primer Texto**
-   ```
-   1. Escribe tu prompt
-   2. Selecciona el estilo
-   3. Elige el idioma
-   4. Ajusta la longitud
-   5. ¡Genera!
-   ```
-
-3. **Personaliza la Generación**
-   - Longitud ajustable (50-500 palabras)
-   - Sube imágenes para generación contextual
-   - Guarda y exporta tus generaciones
-
-## 💡 Ejemplos Prácticos
-
-### 📱 Marketing Digital
-```
-Prompt: "Nuevo smartphone"
-Estilo: Persuasivo
-Idioma: Español
-Resultado: "Descubre la próxima evolución en tecnología móvil..."
-```
-
-### 📖 Storytelling
-```
-Prompt: "Noche de tormenta"
-Estilo: Horror
-Idioma: Español
-Resultado: "Los relámpagos iluminaban la antigua mansión..."
-```
-
-### 🎓 Contenido Académico
-```
-Prompt: "Calentamiento global"
-Estilo: Técnico
-Idioma: Español
-Resultado: "El incremento en la temperatura media global..."
-```
-
-## 🛠️ Especificaciones Técnicas
-
-- **Frontend**: HTML, CSS, JavaScript puro
-- **API**: OpenRouter AI con modelo Qwen 2.5 VL 32B
-- **Almacenamiento**: Local en navegador
-- **Diseño**: Responsive para todos los dispositivos
-
-## 🔒 Privacidad y Seguridad
-
-- Sin almacenamiento en servidores externos
-- Llamadas API seguras y encriptadas
-- Sin recolección de datos personales
-
-## 🤝 Contribuir
-
-1. Fork el repositorio
-2. Crea tu rama de características
-3. Commit tus cambios
-4. Push a la rama
-5. Abre un Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+* **Localment:**
+    1.  Descarrega el fitxer `PhraseForge.htm`.
+    2.  Obre'l amb el teu navegador web preferit.
+    3.  Introdueix la teva clau API d'OpenRouter quan se't demani.
+    4.  Comença a forjar!
+* **A GitHub Pages:**
+    1.  Simplement visita l'URL: `https://<el-teu-usuari>.github.io/<el-teu-repositori>/PhraseForge.htm` (substitueix `<el-teu-usuari>` i `<el-teu-repositori>`!)
+    2.  Introdueix la teva clau API d'OpenRouter quan se't demani.
+    3.  Deixa anar la teva creativitat!
 
 ---
 
-Hecho con ❤️ para creadores de contenido y escritores de todo el mundo.
-
-¿Preguntas? [Abre un Issue](https://github.com/tuusuario/phrase-forge/issues)
+Esperem que gaudeixis forjant frases i textos amb Phrase Forge! 🎉
