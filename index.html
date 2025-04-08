@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phrase Forge</title>
+    <link rel="icon" href="assets/industry.ico" type="image/x-icon">
     <style>
         /* --- Variables Globales --- */
         :root {
@@ -92,7 +93,7 @@
             margin-bottom: 10px; /* Espacio antes del estado */
         }
         .api-key-section input[type="password"],
-        .api-key-section input[type="text"] {
+        .api-key-section input[type="text"] { /* Permitir text para visibilidad opcional */
             flex-grow: 1; /* Ocupa el espacio disponible */
             padding: 10px; /* Padding consistente */
             border: 1px solid var(--border-color);
@@ -109,6 +110,7 @@
             font-size: 0.9em;
             margin-top: 8px;
             min-height: 1.2em; /* Evita saltos de layout */
+            /* aria-live="polite" añadido en HTML */
         }
         .api-key-section p { /* Estilo para el enlace a OpenRouter */
              font-size: 0.85em;
@@ -241,6 +243,7 @@
             box-sizing: border-box;
             font-size: 0.95em; /* Ligeramente más pequeño */
             line-height: 1.5; /* Mejor espaciado de línea */
+            /* Considerar añadir overflow-y: auto si el contenido puede ser muy largo */
         }
         #history-list {
             max-height: 350px; /* Un poco más alto */
@@ -304,6 +307,7 @@
             font-weight: bold;
             color: var(--secondary-color);
             font-style: italic;
+            /* aria-live="polite" añadido en HTML */
         }
         #error-message, #warning-message {
             padding: 12px 15px;
@@ -312,6 +316,7 @@
             display: none;
             font-size: 0.95em;
             border: 1px solid transparent;
+            /* aria-live="polite" añadido en HTML */
         }
         #error-message {
             color: #721c24; /* Texto oscuro para contraste */
@@ -390,7 +395,7 @@
                 <button id="save-key-btn">Guardar Clave</button>
                 <button id="clear-key-btn">Borrar Clave</button>
             </div>
-            <div id="api-key-status">Introduce tu clave para activar la generación. La clave se guarda localmente.</div>
+            <div id="api-key-status" aria-live="polite">Introduce tu clave para activar la generación. La clave se guarda localmente.</div>
             <p>
                 Consigue tu clave en <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">OpenRouter</a>.
                 Phrase Forge necesita una clave válida para generar texto.
@@ -440,20 +445,23 @@
             <div class="form-group">
                 <label for="length">Longitud para la Próxima Generación (palabras aprox.):</label>
                 <div class="length-container">
-                    <input type="range" id="length" min="50" max="1000" step="10" value="200"> <span id="length-value">200 palabras</span>
+                    <input type="range" id="length" min="50" max="1000" step="10" value="200">
+                    <span id="length-value">200 palabras</span>
                 </div>
-            </div>
+                </div>
 
             <button id="generate-btn" disabled>Generar y Añadir Texto</button>
-            <div id="loading">Generando... Por favor, espera...</div>
-            <div id="error-message"></div>
-            <div id="warning-message"></div>
+            <div id="loading" aria-live="polite">Generando... Por favor, espera...</div>
+            <div id="error-message" aria-live="polite"></div>
+            <div id="warning-message" aria-live="polite"></div>
         </div>
 
         <div class="result-section">
             <h2>Área de Resultado</h2>
-            <textarea id="result" placeholder="Introduce tu clave API arriba, luego genera texto. El texto generado por IA se añadirá aquí..." readonly></textarea> <div class="button-group">
-                <button id="copy-result-btn" disabled>Copiar Texto</button> <button id="export-btn" disabled>Exportar como .txt</button>
+            <textarea id="result" placeholder="Introduce tu clave API arriba, luego genera texto. El texto generado por IA se añadirá aquí..." readonly></textarea>
+            <div class="button-group">
+                <button id="copy-result-btn" disabled>Copiar Texto</button>
+                <button id="export-btn" disabled>Exportar como .txt</button>
                 <button id="clear-result-btn" disabled>Limpiar Área</button>
             </div>
         </div>
@@ -468,10 +476,11 @@
     <script>
         // --- Configuración ---
         const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-        // Modelo especificado por el usuario
-        const MODEL = 'meta-llama/llama-4-maverick:free';
-        const MAX_HISTORY_ITEMS = 25; // Aumentado límite de historial
-        const DEFAULT_MAX_TOKENS = 1500; // Aumentado para permitir respuestas más largas si es necesario
+        // Modelo especificado - ¡Asegúrate de que sea compatible con OpenRouter y tus necesidades!
+        const MODEL = 'meta-llama/llama-3-8b-instruct:free'; // Modelo actualizado sugerido (verifica disponibilidad)
+        const MAX_HISTORY_ITEMS = 25;
+        const MAX_TOKENS_LIMIT = 4000; // Límite superior para max_tokens
+        const WORD_TO_TOKEN_RATIO = 0.6; // Heurística: palabras / ratio = tokens (ajustar si es necesario)
         const API_KEY_STORAGE_KEY = 'phraseForgeApiKey';
         const HISTORY_STORAGE_KEY = 'phraseForgeHistory';
 
@@ -555,7 +564,6 @@
             apiKeyInput.disabled = isGenerating; // Deshabilitar input durante la generación
         }
 
-
         // --- Actualizaciones de UI ---
         function updateLengthDisplay() {
             lengthValueEl.textContent = `${lengthEl.value} palabras`;
@@ -572,6 +580,13 @@
             languageEl.disabled = isLoading;
             lengthEl.disabled = isLoading;
             updateApiKeyButtonsState(); // Actualiza estado de botones de API key
+
+            // Deshabilitar botones de resultado y historial durante la carga
+            copyResultBtn.disabled = isLoading || !resultEl.value;
+            exportBtn.disabled = isLoading || !resultEl.value;
+            clearResultBtn.disabled = isLoading || !resultEl.value;
+            clearHistoryBtn.disabled = isLoading || getHistoryFromStorage().length === 0;
+
 
             // Ocultar mensajes al iniciar la carga
             if (isLoading) {
@@ -707,6 +722,7 @@
                  updateLengthDisplay(); // Actualizar el texto del slider
 
                  // Mostrar el resultado completo en el área de resultados
+                 // Limpia el área antes de cargar el resultado del historial
                  resultEl.value = historyItem.result || '';
 
                  // Habilitar/deshabilitar botones del área de resultado
@@ -715,47 +731,32 @@
                  exportBtn.disabled = !hasResultContent;
                  clearResultBtn.disabled = !hasResultContent;
 
-                 // Mostrar advertencia si fue truncado
-                 if (historyItem.finish_reason === 'length' || historyItem.finish_reason === 'max_tokens') {
-                     showWarning("Este texto cargado podría haber sido truncado debido a límites en la generación original.");
-                 } else {
-                     hideMessage('warning'); // Ocultar advertencia si no fue truncado
-                 }
-                 hideMessage('error'); // Ocultar errores
-
-                 // Hacer scroll hacia el área de resultados para conveniencia
-                 resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-             } else {
-                 console.error("No se pudo recuperar el elemento del historial para el índice:", index);
-                 showError("Fallo al cargar el elemento del historial seleccionado.");
+                 // Opcional: Hacer scroll al área de resultado
+                 resultEl.scrollIntoView({ behavior: 'smooth' });
              }
         }
-
 
         function clearHistory() {
             if (confirm('¿Estás seguro de que quieres borrar TODO el historial de generaciones? Esta acción no se puede deshacer.')) {
                 localStorage.removeItem(HISTORY_STORAGE_KEY);
-                loadHistory(); // Recargar para mostrar historial vacío y actualizar botones
+                displayHistory([]); // Actualizar la vista para mostrarla vacía
             }
         }
 
-        // --- Gestión del Área de Resultados ---
-         function copyResultText() {
-            if (!resultEl.value) {
-                showWarning("No hay texto en el área de resultado para copiar.");
-                return;
-            }
+        // --- Funciones de Acción del Área de Resultado ---
+        function copyResultText() {
+            if (!resultEl.value) return; // No hacer nada si no hay texto
+
             navigator.clipboard.writeText(resultEl.value)
                 .then(() => {
-                    // Opcional: Mostrar una confirmación temporal
+                    // Feedback visual temporal
                     const originalText = copyResultBtn.textContent;
                     copyResultBtn.textContent = '¡Copiado!';
                     copyResultBtn.style.backgroundColor = 'var(--success-color)';
                     setTimeout(() => {
                         copyResultBtn.textContent = originalText;
-                        copyResultBtn.style.backgroundColor = ''; // Volver al color original
-                    }, 2000);
+                        copyResultBtn.style.backgroundColor = 'var(--primary-color)'; // O el color original si era diferente
+                    }, 1500);
                 })
                 .catch(err => {
                     console.error('Error al copiar texto: ', err);
@@ -763,227 +764,158 @@
                 });
         }
 
-
         function exportText() {
+            if (!resultEl.value) return;
+
             const textToExport = resultEl.value;
-            if (!textToExport) {
-                 showWarning('¡No hay nada que exportar en el área de resultado!');
-                return;
-            }
-
-            // Crear un Blob (objeto binario) con el texto
             const blob = new Blob([textToExport], { type: 'text/plain;charset=utf-8' });
-            // Crear una URL temporal para el Blob
             const url = URL.createObjectURL(blob);
-
-            // Crear un enlace invisible para iniciar la descarga
             const link = document.createElement('a');
             link.href = url;
-            // Nombre del archivo sugerido
-            link.download = `phrase_forge_output_${Date.now()}.txt`;
-
-            // Simular clic en el enlace
+            // Crear un nombre de archivo descriptivo
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            link.download = `phrase-forge-export-${timestamp}.txt`;
             document.body.appendChild(link); // Necesario para Firefox
             link.click();
-
-            // Limpiar
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url); // Liberar la URL temporal
+            document.body.removeChild(link); // Limpiar
+            URL.revokeObjectURL(url); // Liberar memoria
         }
 
         function clearResultArea() {
-            resultEl.value = ''; // Limpiar el textarea
-            // Deshabilitar botones asociados
+            // No suele necesitar confirmación, pero se podría añadir si se desea
+            resultEl.value = '';
+            // Deshabilitar botones ya que no hay contenido
             copyResultBtn.disabled = true;
             exportBtn.disabled = true;
             clearResultBtn.disabled = true;
-            // Ocultar mensajes
-            hideMessage('warning');
-            hideMessage('error');
         }
 
-        // --- Generación de Texto (Llamada API) ---
+
+        // --- Función Principal de Generación ---
         async function generateText() {
-            if (isGenerating) {
-                showWarning("Ya hay una generación en progreso. Por favor, espera.");
-                return;
-            }
-
-            const userPrompt = promptEl.value.trim();
-            const selectedStyle = styleEl.value;
-            const selectedLanguage = languageEl.value;
-            const targetLength = lengthEl.value;
-
-            // --- Validaciones Previas ---
+            if (isGenerating) return; // Evitar llamadas múltiples
             if (!currentApiKey) {
-                showError("Falta la clave API. Por favor, introduce y guarda tu clave de OpenRouter.");
-                apiKeyInput.focus(); // Poner foco en el input de la clave
-                return;
-            }
-            if (!userPrompt) {
-                showError("Por favor, introduce una instrucción (prompt).");
-                promptEl.focus(); // Poner foco en el prompt
+                showError('Por favor, introduce y guarda una clave API válida primero.');
                 return;
             }
 
-            // --- Iniciar Proceso de Carga ---
+            const prompt = promptEl.value.trim();
+            if (!prompt) {
+                showError('Por favor, introduce una instrucción (prompt).');
+                return;
+            }
+
+            const style = styleEl.value;
+            const language = languageEl.value;
+            const length = parseInt(lengthEl.value, 10);
+
+            // Construir el prompt completo para la IA
+            const fullPrompt = `Write a text in ${language} with a ${style} style, approximately ${length} words long, based on the following instruction:\n\n${prompt}`;
+
+            // Calcular max_tokens basado en la longitud deseada en palabras (heurística)
+            // Ajusta WORD_TO_TOKEN_RATIO si es necesario para tu modelo/idioma
+            let maxTokens = Math.round(length / WORD_TO_TOKEN_RATIO);
+            // Aplicar un límite superior razonable
+            maxTokens = Math.min(maxTokens, MAX_TOKENS_LIMIT);
+
             showLoading(true);
-            // Deshabilitar botones de resultado mientras se genera
-            copyResultBtn.disabled = true;
-            exportBtn.disabled = true;
-            clearResultBtn.disabled = true;
-
-            // --- Construir Mensajes para la API ---
-            // Mensaje del sistema para guiar a la IA
-            const systemMessage = `Eres Phrase Forge, un asistente IA especializado en generar texto según especificaciones del usuario. Sigue las instrucciones con precisión. Responde ÚNICAMENTE con el texto solicitado en el idioma especificado. No añadas saludos, disculpas, o auto-referencias a menos que sean parte del texto solicitado. No uses markdown en la respuesta.`;
-
-            // Mensaje del usuario con todos los detalles
-            const userMessageContent = `
-Genera un texto siguiendo estas especificaciones:
-- **TAREA**: Escribe un texto basado en la instrucción del usuario.
-- **INSTRUCCIÓN DEL USUARIO**: "${userPrompt}"
-- **ESTILO DE ESCRITURA**: ${selectedStyle}
-- **IDIOMA**: ${selectedLanguage}
-- **NÚMERO DE PALABRAS OBJETIVO APROXIMADO**: ${targetLength} palabras.
-
-**INSTRUCCIONES IMPORTANTES**:
-1. Intenta que el número total de palabras sea **cercano a ${targetLength} palabras**, pero prioriza la **finalización natural** de frases e ideas sobre alcanzar estrictamente el número exacto.
-2. Asegúrate de que el texto fluya bien y **concluya adecuadamente** con una frase o idea terminada. No cortes a mitad de frase a menos que te quedes absolutamente sin longitud de generación permitida.
-3. Responde **solamente** con el texto generado, en el idioma solicitado (${selectedLanguage}). No incluyas la instrucción original ni ningún texto introductorio como "Aquí tienes el texto:".
-`;
-
-            let finishReason = null; // Para guardar por qué terminó la generación
-            let generatedText = ''; // Para guardar el texto generado
+            hideMessage('error'); // Ocultar mensajes previos
+            hideMessage('warning');
 
             try {
-                // --- Determinar Referer y Title para OpenRouter ---
-                // Necesario para cumplir con los requisitos de OpenRouter
-                let referer = 'http://localhost/phraseforge/unknown'; // Valor por defecto seguro
-                let title = 'Phrase Forge'; // Título por defecto
-                if (typeof window !== 'undefined' && window.location.href) {
-                    // Si se ejecuta desde un archivo local (file://), usar un referer genérico
-                    if (window.location.protocol === 'file:') {
-                        referer = 'http://localhost/phraseforge/localfile';
-                    } else {
-                        referer = window.location.href; // Usar la URL actual si es http/https
-                    }
-                }
-                 if (typeof document !== 'undefined' && document.title) {
-                    title = document.title; // Usar el título del documento si está disponible
-                 }
-
-
-                // --- Realizar la Llamada Fetch a la API ---
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${currentApiKey}`, // Clave API
                         'Content-Type': 'application/json',
-                        // Cabeceras requeridas por OpenRouter
-                        'HTTP-Referer': referer,
-                        'X-Title': title,
+                        'Authorization': `Bearer ${currentApiKey}`,
+                        // OpenRouter recomienda añadir 'HTTP-Referer' y 'X-Title'
+                        'HTTP-Referer': window.location.href, // O tu sitio web
+                        'X-Title': 'Phrase Forge' // O el nombre de tu app
                     },
                     body: JSON.stringify({
-                        model: MODEL, // Modelo seleccionado
+                        model: MODEL,
                         messages: [
-                            { "role": "system", "content": systemMessage },
-                            { "role": "user", "content": userMessageContent }
+                            { role: "user", content: fullPrompt }
                         ],
-                        max_tokens: DEFAULT_MAX_TOKENS, // Límite máximo de tokens a generar
-                        // Otros parámetros opcionales (temperature, top_p) podrían añadirse aquí
-                        // temperature: 0.7, // Ejemplo: Un valor para creatividad controlada
-                    }),
+                        max_tokens: maxTokens,
+                        // Otros parámetros opcionales: temperature, top_p, etc.
+                        // temperature: 0.7,
+                    })
                 });
 
-                // --- Manejar la Respuesta de la API ---
                 if (!response.ok) {
-                    // Si la respuesta no es exitosa (status code no es 2xx)
+                    // Intentar obtener más detalles del error si es posible
                     let errorData;
-                    let errorText = `Fallo en la petición API: ${response.status} ${response.statusText}.`;
                     try {
-                        // Intentar parsear el cuerpo del error como JSON
                         errorData = await response.json();
-                        console.error("Datos de respuesta de error API:", errorData);
-                        // Extraer mensaje de error específico si está disponible
-                        const detail = errorData?.error?.message || JSON.stringify(errorData.error);
-                        if (detail) { errorText += ` Detalles: ${detail}`; }
-
-                        // Añadir mensajes específicos para códigos de error comunes
-                        if (response.status === 401) { errorText += " Verifica si tu clave API es válida y tiene fondos/créditos."; }
-                        if (response.status === 429) { errorText += " Límite de tasa excedido (Rate Limit). Por favor, espera e inténtalo de nuevo."; }
-                        if (response.status === 400 && detail && detail.includes("Invalid model")) { errorText += ` El modelo seleccionado '${MODEL}' podría ser inválido o no estar disponible. Consulta la documentación de OpenRouter.`; }
-                        if (response.status === 400 && detail && detail.includes("max_tokens")) { errorText += ` El valor 'max_tokens' (${DEFAULT_MAX_TOKENS}) podría ser demasiado alto para este modelo o petición.`; }
-                        if (response.status === 400 && detail && detail.includes("prompt is too long")) { errorText += ` La instrucción (prompt) es demasiado larga para el modelo. Intenta acortarla.`; }
-
                     } catch (e) {
-                        // Si falla el parseo del JSON del error
-                        console.error("Fallo al parsear JSON del error:", e);
-                        errorText += " Además, no se pudo leer el detalle del error de la respuesta.";
+                        // Si el cuerpo del error no es JSON válido
+                        throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
                     }
-                    // Lanzar un error para ser capturado por el bloque catch principal
-                    throw new Error(errorText);
+
+                    console.error('API Error Data:', errorData);
+                    const errorCode = errorData?.error?.code;
+                    const errorMessage = errorData?.error?.message || `Error HTTP ${response.status}`;
+
+                    if (errorCode === 'invalid_api_key' || response.status === 401) {
+                         throw new Error('Clave API inválida o no autorizada. Verifica tu clave.');
+                    } else if (errorCode === 'rate_limit_exceeded' || response.status === 429) {
+                         throw new Error('Límite de solicitudes excedido. Inténtalo más tarde.');
+                    } else {
+                        throw new Error(errorMessage);
+                    }
                 }
 
-                // Si la respuesta es exitosa (status code 2xx)
                 const data = await response.json();
 
-                // Extraer el texto generado y la razón de finalización
-                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    generatedText = data.choices[0].message.content.trim();
-                    finishReason = data.choices[0].finish_reason; // 'stop', 'length', 'max_tokens', etc.
+                if (data.choices && data.choices.length > 0 && data.choices[0].message?.content) {
+                    const generatedText = data.choices[0].message.content.trim();
+                    const finishReason = data.choices[0].finish_reason;
+
+                    // Añadir al área de resultado (con separador si ya hay texto)
+                    const separator = resultEl.value ? '\n\n---\n\n' : '';
+                    resultEl.value += separator + generatedText;
+
+                    // Sugerencia: Hacer scroll al final del textarea
+                    resultEl.scrollTop = resultEl.scrollHeight;
+
+
+                    // Guardar en el historial
+                    addToHistory({
+                        prompt: prompt, // Guardar el prompt original del usuario
+                        result: generatedText,
+                        style: style,
+                        language: language,
+                        length: length, // Longitud solicitada
+                        timestamp: new Date().toISOString(),
+                        finish_reason: finishReason,
+                        model: MODEL // Guardar el modelo usado
+                    });
+
+                    // Habilitar botones de resultado
+                    copyResultBtn.disabled = false;
+                    exportBtn.disabled = false;
+                    clearResultBtn.disabled = false;
+
+                    // Mostrar advertencia si el texto fue truncado
+                    if (finishReason === 'length' || finishReason === 'max_tokens') {
+                        showWarning('La respuesta puede haber sido truncada porque alcanzó la longitud máxima solicitada o el límite de tokens.');
+                    }
+
                 } else {
-                     // Si la respuesta es 200 OK pero no tiene el formato esperado
-                    console.error("Respuesta inesperada de la API:", data);
-                    throw new Error("La respuesta de la API no contenía el texto generado esperado.");
+                    console.error('Respuesta inesperada de la API:', data);
+                    throw new Error('La API devolvió una respuesta inesperada o vacía.');
                 }
 
-                // --- Actualizar UI con el Resultado ---
-                // Añadir el nuevo texto al área de resultados (añadiendo un separador si ya hay texto)
-                const separator = resultEl.value ? "\n\n---\n\n" : ""; // Separador visual
-                resultEl.value += separator + generatedText;
-
-                // Hacer scroll al final del textarea para ver el nuevo texto
-                resultEl.scrollTop = resultEl.scrollHeight;
-
-                // Habilitar botones de resultado ahora que hay contenido
-                copyResultBtn.disabled = false;
-                exportBtn.disabled = false;
-                clearResultBtn.disabled = false;
-
-                // --- Guardar en el Historial ---
-                addToHistory({
-                    prompt: userPrompt,
-                    style: selectedStyle,
-                    language: selectedLanguage,
-                    length: targetLength,
-                    result: generatedText, // Guardar solo la última generación en el historial individual
-                    timestamp: Date.now(),
-                    finish_reason: finishReason, // Guardar por qué terminó
-                    model: MODEL // Guardar el modelo usado
-                });
-
-                 // Mostrar advertencia si la generación fue truncada
-                 if (finishReason === 'length' || finishReason === 'max_tokens') {
-                     showWarning(`La generación pudo haber sido truncada porque alcanzó el límite de longitud (${finishReason}).`);
-                 }
-
-
             } catch (error) {
-                // --- Manejar Errores Generales (incluyendo los lanzados arriba) ---
-                console.error("Error durante la generación de texto:", error);
-                showError(error.message || "Ocurrió un error desconocido durante la generación.");
-                // Asegurarse de que los botones de resultado estén deshabilitados si falló
-                copyResultBtn.disabled = !resultEl.value;
-                exportBtn.disabled = !resultEl.value;
-                clearResultBtn.disabled = !resultEl.value;
-
+                console.error('Error durante la generación:', error);
+                showError(error.message || 'Ocurrió un error desconocido durante la generación.');
             } finally {
-                // --- Limpieza Final (siempre se ejecuta) ---
-                showLoading(false); // Ocultar indicador de carga y rehabilitar controles
+                showLoading(false); // Asegurar que el estado de carga se desactive
             }
         }
 
-        // --- Inicialización y Event Listeners ---
+        // --- Inicialización ---
         document.addEventListener('DOMContentLoaded', () => {
             // Cargar clave API y historial al iniciar
             loadApiKey();
@@ -1019,3 +951,4 @@ Genera un texto siguiendo estas especificaciones:
     </script>
 </body>
 </html>
+
