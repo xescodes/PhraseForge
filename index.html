@@ -364,17 +364,17 @@
         }
 
         @media (max-width: 600px) {
-            body { padding: 10px; }
-            .container { padding: 15px; }
-            h1 { font-size: 1.7em; }
-            h2 { font-size: 1.3em; }
-            textarea { min-height: 100px; }
-            #result { min-height: 200px; }
-            button { width: 100%; margin-right: 0; margin-bottom: 10px; } /* Botones apilados */
-            .button-group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px;}
-            .button-group button { margin-bottom: 0; } /* Quitar margen inferior extra */
-            .api-key-input-wrapper { gap: 5px; }
-            .api-key-section button { margin-top: 5px; }
+             body { padding: 10px; }
+             .container { padding: 15px; }
+             h1 { font-size: 1.7em; }
+             h2 { font-size: 1.3em; }
+             textarea { min-height: 100px; }
+             #result { min-height: 200px; }
+             button { width: 100%; margin-right: 0; margin-bottom: 10px; } /* Botones apilados */
+             .button-group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px;}
+             .button-group button { margin-bottom: 0; } /* Quitar margen inferior extra */
+             .api-key-input-wrapper { gap: 5px; }
+             .api-key-section button { margin-top: 5px; }
         }
     </style>
 </head>
@@ -411,6 +411,18 @@
             </div>
 
             <div class="form-group">
+                <label for="model-select">Modelo de Lenguaje:</label>
+                <select id="model-select">
+                    <option value="" selected disabled>-- Selecciona un Modelo --</option>
+                    <option value="meta-llama/llama-3-8b-instruct:free">Llama 3 8B Instruct (Free)</option>
+                    <option value="google/gemini-flash-1.5">Google Gemini Flash 1.5</option>
+                    <option value="mistralai/mistral-7b-instruct:free">Mistral 7B Instruct (Free)</option>
+                    <option value="openai/gpt-3.5-turbo">OpenAI GPT-3.5 Turbo</option>
+                    <option value="anthropic/claude-3-haiku">Anthropic Claude 3 Haiku</option>
+                    </select>
+            </div>
+
+            <div class="form-group">
                 <label for="style">Estilo de Escritura:</label>
                 <select id="style">
                     <option value="Formal">Formal</option>
@@ -422,7 +434,7 @@
                     <option value="Humorous">Humorístico</option>
                     <option value="Poetic">Poético</option>
                     <option value="Horror">Terror</option>
-                    </select>
+                 </select>
             </div>
 
             <div class="form-group">
@@ -439,7 +451,7 @@
                     <option value="Chinese">Chino</option>
                     <option value="Japanese">Japonés</option>
                     <option value="Korean">Coreano</option>
-                     </select>
+                 </select>
             </div>
 
             <div class="form-group">
@@ -448,7 +460,7 @@
                     <input type="range" id="length" min="50" max="1000" step="10" value="200">
                     <span id="length-value">200 palabras</span>
                 </div>
-                </div>
+             </div>
 
             <button id="generate-btn" disabled>Generar y Añadir Texto</button>
             <div id="loading" aria-live="polite">Generando... Por favor, espera...</div>
@@ -458,7 +470,7 @@
 
         <div class="result-section">
             <h2>Área de Resultado</h2>
-            <textarea id="result" placeholder="Introduce tu clave API arriba, luego genera texto. El texto generado por IA se añadirá aquí..." readonly></textarea>
+            <textarea id="result" placeholder="Introduce tu clave API arriba, selecciona un modelo, luego genera texto. El texto generado por IA se añadirá aquí..." readonly></textarea>
             <div class="button-group">
                 <button id="copy-result-btn" disabled>Copiar Texto</button>
                 <button id="export-btn" disabled>Exportar como .txt</button>
@@ -474,22 +486,22 @@
     </div>
 
     <script>
-        // --- Configuración ---
+        // --- Configuración Global ---
         const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-        // Modelo especificado - ¡Asegúrate de que sea compatible con OpenRouter y tus necesidades!
-        const MODEL = 'meta-llama/llama-3-8b-instruct:free'; // Modelo actualizado sugerido (verifica disponibilidad)
-        const MAX_HISTORY_ITEMS = 25;
-        const MAX_TOKENS_LIMIT = 4000; // Límite superior para max_tokens
-        const WORD_TO_TOKEN_RATIO = 0.6; // Heurística: palabras / ratio = tokens (ajustar si es necesario)
-        const API_KEY_STORAGE_KEY = 'phraseForgeApiKey';
-        const HISTORY_STORAGE_KEY = 'phraseForgeHistory';
+        // ELIMINADO: const MODEL = '...'; // El modelo ahora se selecciona desde el HTML
+        const MAX_HISTORY_ITEMS = 25; // Máximo de elementos a guardar en el historial
+        const MAX_TOKENS_LIMIT = 4000; // Límite superior de tokens para la API (ajustar según modelo si es necesario)
+        const WORD_TO_TOKEN_RATIO = 0.6; // Estimación para convertir palabras a tokens (puede variar por idioma/modelo)
+        const API_KEY_STORAGE_KEY = 'phraseForgeApiKey'; // Clave para guardar la API key en localStorage
+        const HISTORY_STORAGE_KEY = 'phraseForgeHistory'; // Clave para guardar el historial en localStorage
 
-        // --- Elementos DOM (Cache) ---
+        // --- Referencias a Elementos del DOM (Cache para eficiencia) ---
         const apiKeyInput = document.getElementById('api-key-input');
         const saveKeyBtn = document.getElementById('save-key-btn');
         const clearKeyBtn = document.getElementById('clear-key-btn');
         const apiKeyStatus = document.getElementById('api-key-status');
         const promptEl = document.getElementById('prompt');
+        const modelSelectEl = document.getElementById('model-select'); // NUEVO: Referencia al selector de modelo
         const styleEl = document.getElementById('style');
         const languageEl = document.getElementById('language');
         const lengthEl = document.getElementById('length');
@@ -505,46 +517,59 @@
         const historyListEl = document.getElementById('history-list');
         const clearHistoryBtn = document.getElementById('clear-history-btn');
 
-        // --- Estado de la Aplicación ---
-        let currentApiKey = null;
-        let isGenerating = false; // Para prevenir múltiples llamadas simultáneas
+        // --- Estado Interno de la Aplicación ---
+        let currentApiKey = null; // Almacena la clave API actual
+        let isGenerating = false; // Flag para evitar llamadas múltiples a la API
 
-        // --- Funciones ---
+        // --- Funciones de Utilidad ---
+
+        /**
+         * Escapa caracteres HTML para prevenir XSS básico al mostrar contenido del usuario.
+         * @param {string} unsafe - La cadena potencialmente insegura.
+         * @returns {string} La cadena escapada.
+         */
+        const escapeHtml = (unsafe) => {
+            if (typeof unsafe !== 'string') return '';
+            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        };
 
         // --- Gestión de la Clave API ---
+
+        /** Carga la clave API desde localStorage al iniciar. */
         function loadApiKey() {
             const storedKey = localStorage.getItem(API_KEY_STORAGE_KEY);
             if (storedKey) {
                 currentApiKey = storedKey;
-                apiKeyInput.value = currentApiKey; // Mostrar en el input (tipo password)
+                apiKeyInput.value = currentApiKey; // Rellenar el input (aunque sea tipo password)
                 apiKeyStatus.textContent = 'Clave API cargada desde almacenamiento local.';
                 apiKeyStatus.style.color = 'var(--success-color)';
-                generateBtn.disabled = false; // Habilitar generación si hay clave
             } else {
                 apiKeyStatus.textContent = 'Introduce tu clave API de OpenRouter para activar la generación.';
                 apiKeyStatus.style.color = 'var(--secondary-color)';
-                generateBtn.disabled = true; // Deshabilitar si no hay clave
             }
-            updateApiKeyButtonsState(); // Actualizar botones de clave
+            updateApiKeyButtonsState(); // Actualizar estado de botones Guardar/Borrar
+            updateGenerateButtonState(); // Actualizar estado del botón Generar (depende de clave y modelo)
         }
 
+        /** Guarda la clave API introducida en localStorage. */
         function saveApiKey() {
             const key = apiKeyInput.value.trim();
-            // Validación básica (debe empezar con sk-or-v1-)
+            // Validación simple: debe empezar con 'sk-or-v1-'
             if (key && key.startsWith('sk-or-v1-')) {
                 currentApiKey = key;
                 localStorage.setItem(API_KEY_STORAGE_KEY, currentApiKey);
                 apiKeyStatus.textContent = '¡Clave API guardada correctamente!';
                 apiKeyStatus.style.color = 'var(--success-color)';
-                generateBtn.disabled = isGenerating; // Habilitar si no se está generando
-                hideMessage('error'); // Ocultar errores previos
+                hideMessage('error'); // Ocultar errores previos si se guarda bien
             } else {
                 showError("Formato de clave API inválido. Debe empezar con 'sk-or-v1-'.");
-                generateBtn.disabled = true; // Mantener deshabilitado si la clave es inválida
+                currentApiKey = null; // Invalidar clave si el formato es incorrecto
             }
-             updateApiKeyButtonsState();
+            updateApiKeyButtonsState();
+            updateGenerateButtonState();
         }
 
+        /** Borra la clave API de localStorage. */
         function clearApiKey() {
             if (confirm('¿Estás seguro de que quieres borrar la clave API guardada? Esta acción no se puede deshacer.')) {
                 currentApiKey = null;
@@ -552,61 +577,83 @@
                 apiKeyInput.value = '';
                 apiKeyStatus.textContent = 'Clave API borrada. Introduce una clave para activar la generación.';
                 apiKeyStatus.style.color = 'var(--secondary-color)';
-                generateBtn.disabled = true; // Deshabilitar generación
                 updateApiKeyButtonsState();
+                updateGenerateButtonState(); // El botón de generar se deshabilitará
             }
         }
 
+        /** Actualiza el estado (habilitado/deshabilitado) de los botones Guardar/Borrar clave. */
          function updateApiKeyButtonsState() {
-            const keyExists = !!localStorage.getItem(API_KEY_STORAGE_KEY);
-            clearKeyBtn.disabled = !keyExists || isGenerating; // Deshabilitar si no hay clave o se está generando
-            saveKeyBtn.disabled = isGenerating; // Deshabilitar solo si se está generando
-            apiKeyInput.disabled = isGenerating; // Deshabilitar input durante la generación
-        }
+             const keyExists = !!localStorage.getItem(API_KEY_STORAGE_KEY);
+             // Deshabilitar Borrar si no hay clave o si se está generando
+             clearKeyBtn.disabled = !keyExists || isGenerating;
+             // Deshabilitar Guardar solo si se está generando
+             saveKeyBtn.disabled = isGenerating;
+             // Deshabilitar el input de la clave durante la generación
+             apiKeyInput.disabled = isGenerating;
+         }
 
-        // --- Actualizaciones de UI ---
+        // --- Gestión del Estado del Botón de Generación ---
+
+        /**
+         * Habilita o deshabilita el botón "Generar" basado en si hay una clave API válida
+         * y si se ha seleccionado un modelo. También considera si una generación está en curso.
+         */
+         function updateGenerateButtonState() {
+             const modelSelected = modelSelectEl.value && modelSelectEl.value !== ""; // Verifica que no sea el placeholder
+             generateBtn.disabled = isGenerating || !currentApiKey || !modelSelected;
+         }
+
+
+        // --- Actualizaciones de la Interfaz de Usuario (UI) ---
+
+        /** Actualiza el texto que muestra el valor actual del slider de longitud. */
         function updateLengthDisplay() {
             lengthValueEl.textContent = `${lengthEl.value} palabras`;
         }
 
+        /**
+         * Muestra u oculta el indicador de carga y habilita/deshabilita los controles del formulario.
+         * @param {boolean} isLoading - True para mostrar carga, false para ocultarla.
+         */
         function showLoading(isLoading) {
-            isGenerating = isLoading; // Actualizar estado global
+            isGenerating = isLoading; // Actualizar el estado global
             loadingEl.style.display = isLoading ? 'block' : 'none';
 
-            // Deshabilitar/Habilitar elementos del formulario durante la carga
-            generateBtn.disabled = isLoading || !currentApiKey;
+            // Deshabilitar/habilitar controles principales durante la carga
             promptEl.disabled = isLoading;
+            modelSelectEl.disabled = isLoading; // Deshabilitar selector de modelo
             styleEl.disabled = isLoading;
             languageEl.disabled = isLoading;
             lengthEl.disabled = isLoading;
-            updateApiKeyButtonsState(); // Actualiza estado de botones de API key
 
-            // Deshabilitar botones de resultado y historial durante la carga
-            copyResultBtn.disabled = isLoading || !resultEl.value;
-            exportBtn.disabled = isLoading || !resultEl.value;
-            clearResultBtn.disabled = isLoading || !resultEl.value;
-            clearHistoryBtn.disabled = isLoading || getHistoryFromStorage().length === 0;
+            updateGenerateButtonState(); // Actualizar estado del botón Generar
+            updateApiKeyButtonsState(); // Actualizar estado de botones de API key
+            updateResultButtonsState(); // Actualizar estado de botones de resultado
+            updateHistoryButtonsState(); // Actualizar estado de botones de historial
 
-
-            // Ocultar mensajes al iniciar la carga
+            // Ocultar mensajes de error/advertencia al iniciar una nueva carga
             if (isLoading) {
                 hideMessage('error');
                 hideMessage('warning');
             }
         }
 
+        /** Muestra un mensaje de error. */
         function showError(message) {
             errorMessageEl.textContent = `Error: ${message}`;
             errorMessageEl.style.display = 'block';
-            hideMessage('warning'); // Ocultar advertencia si hay error
+            hideMessage('warning'); // Ocultar advertencia si se muestra un error
         }
 
+        /** Muestra un mensaje de advertencia. */
         function showWarning(message) {
             warningMessageEl.textContent = `Advertencia: ${message}`;
             warningMessageEl.style.display = 'block';
-            hideMessage('error'); // Ocultar error si hay advertencia
+            hideMessage('error'); // Ocultar error si se muestra una advertencia
         }
 
+        /** Oculta un tipo específico de mensaje (error o warning). */
         function hideMessage(type) {
             if (type === 'error') {
                 errorMessageEl.style.display = 'none';
@@ -618,24 +665,28 @@
         }
 
         // --- Gestión del Historial ---
+
+        /** Carga el historial desde localStorage y lo muestra. */
         function loadHistory() {
             const history = getHistoryFromStorage();
             displayHistory(history);
-            clearHistoryBtn.disabled = history.length === 0; // Habilitar/deshabilitar botón
+            updateHistoryButtonsState(); // Actualizar botón Limpiar Historial
         }
 
+        /** Obtiene el historial parseado desde localStorage. */
         function getHistoryFromStorage() {
             const storedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
             try {
-                // Parsea el historial o devuelve un array vacío si no existe o está corrupto
+                // Devuelve el array parseado o uno vacío si no hay nada o hay error
                 return storedHistory ? JSON.parse(storedHistory) : [];
             } catch (e) {
                 console.error("Error al parsear el historial desde localStorage:", e);
-                localStorage.removeItem(HISTORY_STORAGE_KEY); // Limpiar datos corruptos
+                localStorage.removeItem(HISTORY_STORAGE_KEY); // Limpiar si está corrupto
                 return [];
             }
         }
 
+        /** Guarda el array del historial en localStorage. */
         function saveHistoryToStorage(history) {
             try {
                 localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
@@ -645,118 +696,144 @@
             }
         }
 
+        /**
+         * Añade un nuevo elemento al historial (al principio) y lo guarda.
+         * @param {object} item - El objeto de historial a añadir.
+         */
         function addToHistory(item) {
             const history = getHistoryFromStorage();
-            history.unshift(item); // Añadir al principio (más reciente primero)
+            history.unshift(item); // Añadir al inicio para que los más nuevos aparezcan arriba
 
-            // Limitar el tamaño del historial
+            // Limitar el número de elementos en el historial
             if (history.length > MAX_HISTORY_ITEMS) {
-                history.pop(); // Eliminar el más antiguo
+                history.pop(); // Eliminar el elemento más antiguo (del final)
             }
 
             saveHistoryToStorage(history);
-            displayHistory(history); // Actualizar la vista del historial
-            clearHistoryBtn.disabled = false; // Asegurar que el botón de limpiar esté habilitado
+            displayHistory(history); // Actualizar la visualización
+            updateHistoryButtonsState(); // Asegurar que el botón Limpiar esté habilitado
         }
 
+        /** Muestra los elementos del historial en la lista. */
         function displayHistory(history) {
-            historyListEl.innerHTML = ''; // Limpiar vista actual
+            historyListEl.innerHTML = ''; // Limpiar la lista actual
             if (history.length === 0) {
                 historyListEl.innerHTML = '<p>Aún no se han registrado generaciones individuales.</p>';
-                clearHistoryBtn.disabled = true;
-                return;
+                return; // No hacer nada más si no hay historial
             }
-
-            clearHistoryBtn.disabled = false; // Habilitar botón si hay historial
 
             history.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.classList.add('history-item');
-                div.dataset.index = index; // Guardar índice para recuperarlo al hacer clic
+                div.dataset.index = index; // Guardar índice para saber cuál cargar al hacer clic
 
-                // Validar y formatear datos del historial
-                const timestamp = item?.timestamp ? new Date(item.timestamp).toLocaleString() : 'N/A';
-
-                // Función simple para escapar HTML y prevenir XSS básico
-                const escapeHtml = (unsafe) => {
-                    if (typeof unsafe !== 'string') return '';
-                    return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-                };
-
+                // Extraer y formatear datos del item de historial (con valores por defecto)
+                const timestamp = item?.timestamp ? new Date(item.timestamp).toLocaleString('es-ES') : 'N/A'; // Formato local
                 const promptSnippet = item?.prompt ? escapeHtml(item.prompt.substring(0, 100)) + (item.prompt.length > 100 ? '...' : '') : '[Sin Prompt]';
                 const resultSnippet = item?.result ? escapeHtml(item.result.substring(0, 150)) + (item.result.length > 150 ? '...' : '') : '[Sin Resultado]';
+                const modelUsed = item?.model ? escapeHtml(item.model) : 'N/A'; // Mostrar modelo usado
                 const style = item?.style ? escapeHtml(item.style) : 'N/A';
                 const language = item?.language ? escapeHtml(item.language) : 'N/A';
                 const lengthReq = item?.length ? item.length : 'N/A';
-                const finishReason = item?.finish_reason;
+                const finishReason = item?.finish_reason; // Razón por la que finalizó la generación
 
-                // Indicador si la generación pudo ser truncada
+                // Añadir indicador visual si la generación pudo ser truncada por longitud
                 const truncatedIndicator = (finishReason === 'length' || finishReason === 'max_tokens')
                     ? '<span class="truncated-indicator">(Podría estar truncado)</span>'
                     : '';
 
-                // Crear HTML para el elemento del historial
+                // Construir el HTML interno del elemento de historial
                 div.innerHTML = `
                     <strong>Prompt:</strong> ${promptSnippet}
                     <p><strong>Fragmento del Resultado:</strong> ${resultSnippet}${truncatedIndicator}</p>
-                    <div class="history-meta">Estilo: ${style} | Idioma: ${language} | Longitud Solicitada: ${lengthReq} palabras | ${timestamp}</div>
+                    <div class="history-meta">Modelo: ${modelUsed} | Estilo: ${style} | Idioma: ${language} | Longitud Solicitada: ${lengthReq} palabras | ${timestamp}</div>
                 `;
 
-                // Añadir listener para cargar este item al hacer clic
+                // Añadir evento para cargar este item al hacer clic
                 div.addEventListener('click', () => loadHistoryItem(index));
 
                 historyListEl.appendChild(div);
             });
         }
 
+        /**
+         * Carga los datos de un elemento del historial en los campos del formulario.
+         * @param {number} index - El índice del elemento a cargar.
+         */
         function loadHistoryItem(index) {
              const allHistory = getHistoryFromStorage();
-             const historyItem = allHistory[index];
+             if (index >= 0 && index < allHistory.length) {
+                 const item = allHistory[index];
+                 // Rellenar los campos del formulario
+                 promptEl.value = item.prompt || '';
+                 modelSelectEl.value = item.model || ''; // Cargar el modelo guardado
+                 styleEl.value = item.style || 'Narrative'; // Usar valor por defecto si no existe
+                 languageEl.value = item.language || 'English';
+                 lengthEl.value = item.length || 200;
+                 updateLengthDisplay(); // Actualizar el display del slider
 
-             if (historyItem) {
-                 // Restaurar los valores en los campos del formulario
-                 promptEl.value = historyItem.prompt || '';
-                 styleEl.value = historyItem.style || 'Narrative'; // Valor por defecto si no existe
-                 languageEl.value = historyItem.language || 'English'; // Valor por defecto
-                 lengthEl.value = historyItem.length || 200; // Valor por defecto
-                 updateLengthDisplay(); // Actualizar el texto del slider
+                 // Mostrar el resultado completo de ese historial en el área principal
+                 resultEl.value = item.result || '';
 
-                 // Mostrar el resultado completo en el área de resultados
-                 // Limpia el área antes de cargar el resultado del historial
-                 resultEl.value = historyItem.result || '';
+                 updateResultButtonsState(); // Actualizar botones Copiar/Exportar/Limpiar resultado
+                 updateGenerateButtonState(); // Actualizar botón Generar (puede que ahora esté habilitado)
 
-                 // Habilitar/deshabilitar botones del área de resultado
-                 const hasResultContent = !!historyItem.result;
-                 copyResultBtn.disabled = !hasResultContent;
-                 exportBtn.disabled = !hasResultContent;
-                 clearResultBtn.disabled = !hasResultContent;
-
-                 // Opcional: Hacer scroll al área de resultado
-                 resultEl.scrollIntoView({ behavior: 'smooth' });
+                 // Opcional: Hacer scroll hacia arriba para ver los campos rellenados
+                 window.scrollTo({ top: 0, behavior: 'smooth' });
              }
         }
 
+        /** Borra todo el historial de localStorage. */
         function clearHistory() {
             if (confirm('¿Estás seguro de que quieres borrar TODO el historial de generaciones? Esta acción no se puede deshacer.')) {
                 localStorage.removeItem(HISTORY_STORAGE_KEY);
-                displayHistory([]); // Actualizar la vista para mostrarla vacía
+                loadHistory(); // Recargar para mostrar la lista vacía y actualizar botones
             }
         }
 
-        // --- Funciones de Acción del Área de Resultado ---
-        function copyResultText() {
-            if (!resultEl.value) return; // No hacer nada si no hay texto
+        /** Actualiza el estado del botón "Limpiar Historial". */
+        function updateHistoryButtonsState() {
+             const historyExists = getHistoryFromStorage().length > 0;
+             clearHistoryBtn.disabled = !historyExists || isGenerating;
+        }
 
+
+        // --- Funciones Relacionadas con el Área de Resultado ---
+
+        /**
+         * Añade nuevo texto al área de resultado, separándolo del anterior.
+         * @param {string} newText - El texto generado a añadir.
+         */
+        function updateResultDisplay(newText) {
+            // Añadir separador si ya hay contenido previo
+            resultEl.value += (resultEl.value ? '\n\n---\n\n' : '') + newText;
+            // Hacer scroll automático al final para ver el nuevo texto
+            resultEl.scrollTop = resultEl.scrollHeight;
+            updateResultButtonsState(); // Habilitar botones de resultado
+        }
+
+        /** Limpia el contenido del área de resultado. */
+        function clearResultArea() {
+             if (confirm('¿Estás seguro de que quieres limpiar el área de resultado?')) {
+                resultEl.value = '';
+                updateResultButtonsState(); // Deshabilitar botones de resultado
+             }
+        }
+
+        /** Copia el contenido del área de resultado al portapapeles. */
+        function copyResultText() {
+            if (!resultEl.value) return; // No hacer nada si está vacío
             navigator.clipboard.writeText(resultEl.value)
                 .then(() => {
-                    // Feedback visual temporal
+                    // Feedback visual temporal al usuario
                     const originalText = copyResultBtn.textContent;
                     copyResultBtn.textContent = '¡Copiado!';
                     copyResultBtn.style.backgroundColor = 'var(--success-color)';
                     setTimeout(() => {
                         copyResultBtn.textContent = originalText;
-                        copyResultBtn.style.backgroundColor = 'var(--primary-color)'; // O el color original si era diferente
-                    }, 1500);
+                        // Volver al color original del botón (asumiendo que era el primario)
+                        copyResultBtn.style.backgroundColor = 'var(--primary-color)';
+                    }, 2000); // Mostrar mensaje por 2 segundos
                 })
                 .catch(err => {
                     console.error('Error al copiar texto: ', err);
@@ -764,188 +841,175 @@
                 });
         }
 
-        function exportText() {
-            if (!resultEl.value) return;
-
-            const textToExport = resultEl.value;
-            const blob = new Blob([textToExport], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            // Crear un nombre de archivo descriptivo
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            link.download = `phrase-forge-export-${timestamp}.txt`;
-            document.body.appendChild(link); // Necesario para Firefox
-            link.click();
-            document.body.removeChild(link); // Limpiar
-            URL.revokeObjectURL(url); // Liberar memoria
+        /** Exporta el contenido del área de resultado como un archivo .txt. */
+        function exportResultAsTxt() {
+             if (!resultEl.value) return; // No hacer nada si está vacío
+             // Crear un Blob (objeto binario) con el texto
+             const blob = new Blob([resultEl.value], { type: 'text/plain;charset=utf-8' });
+             // Crear un enlace temporal para la descarga
+             const link = document.createElement('a');
+             link.href = URL.createObjectURL(blob);
+             // Crear un nombre de archivo dinámico con fecha y hora
+             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+             link.download = `phrase_forge_result_${timestamp}.txt`;
+             // Simular clic en el enlace para iniciar la descarga
+             document.body.appendChild(link); // Necesario para Firefox
+             link.click();
+             // Limpiar el enlace temporal
+             document.body.removeChild(link);
+             URL.revokeObjectURL(link.href); // Liberar el objeto URL
         }
 
-        function clearResultArea() {
-            // No suele necesitar confirmación, pero se podría añadir si se desea
-            resultEl.value = '';
-            // Deshabilitar botones ya que no hay contenido
-            copyResultBtn.disabled = true;
-            exportBtn.disabled = true;
-            clearResultBtn.disabled = true;
+        /** Actualiza el estado de los botones del área de resultado (Copiar, Exportar, Limpiar). */
+        function updateResultButtonsState() {
+            const hasResult = resultEl.value.trim().length > 0;
+            copyResultBtn.disabled = !hasResult || isGenerating;
+            exportBtn.disabled = !hasResult || isGenerating;
+            clearResultBtn.disabled = !hasResult || isGenerating;
         }
 
+        // --- Lógica Principal: Generación de Texto ---
 
-        // --- Función Principal de Generación ---
+        /** Función asíncrona que llama a la API de OpenRouter para generar texto. */
         async function generateText() {
-            if (isGenerating) return; // Evitar llamadas múltiples
+            // 1. Validaciones Previas
             if (!currentApiKey) {
-                showError('Por favor, introduce y guarda una clave API válida primero.');
+                showError("Por favor, introduce y guarda tu clave API de OpenRouter primero.");
+                apiKeyInput.focus(); // Poner foco en el input de la clave
                 return;
             }
-
             const prompt = promptEl.value.trim();
+            const selectedModel = modelSelectEl.value; // Obtener el modelo seleccionado
             if (!prompt) {
-                showError('Por favor, introduce una instrucción (prompt).');
+                showError("Por favor, introduce una instrucción (prompt).");
+                promptEl.focus();
+                return;
+            }
+            if (!selectedModel) { // Validar que se ha seleccionado un modelo
+                showError("Por favor, selecciona un modelo de lenguaje.");
+                modelSelectEl.focus();
                 return;
             }
 
+            // 2. Iniciar Estado de Carga
+            showLoading(true);
+
+            // 3. Recopilar Parámetros
             const style = styleEl.value;
             const language = languageEl.value;
-            const length = parseInt(lengthEl.value, 10);
+            const requestedLength = parseInt(lengthEl.value, 10);
 
-            // Construir el prompt completo para la IA
-            const fullPrompt = `Write a text in ${language} with a ${style} style, approximately ${length} words long, based on the following instruction:\n\n${prompt}`;
+            // Calcular 'max_tokens' basado en la longitud deseada (heurística)
+            // y asegurarse de no exceder el límite global MAX_TOKENS_LIMIT
+            const calculatedTokens = Math.round(requestedLength / WORD_TO_TOKEN_RATIO);
+            const maxTokens = Math.min(calculatedTokens, MAX_TOKENS_LIMIT);
 
-            // Calcular max_tokens basado en la longitud deseada en palabras (heurística)
-            // Ajusta WORD_TO_TOKEN_RATIO si es necesario para tu modelo/idioma
-            let maxTokens = Math.round(length / WORD_TO_TOKEN_RATIO);
-            // Aplicar un límite superior razonable
-            maxTokens = Math.min(maxTokens, MAX_TOKENS_LIMIT);
+            // 4. Construir Mensajes para la API (System y User)
+            const systemPrompt = `You are a helpful writing assistant. Generate text following the user's instructions. The user wants the output in a ${style} style and in ${language}. Aim for a length of approximately ${requestedLength} words.`;
+            const userPrompt = prompt;
 
-            showLoading(true);
-            hideMessage('error'); // Ocultar mensajes previos
-            hideMessage('warning');
-
+            // 5. Llamada a la API (Fetch)
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${currentApiKey}`,
-                        // OpenRouter recomienda añadir 'HTTP-Referer' y 'X-Title'
-                        'HTTP-Referer': window.location.href, // O tu sitio web
-                        'X-Title': 'Phrase Forge' // O el nombre de tu app
+                        // Cabeceras requeridas/recomendadas por OpenRouter
+                        'HTTP-Referer': window.location.href, // Enviar la URL actual
+                        'X-Title': 'Phrase Forge', // Nombre de tu aplicación
                     },
                     body: JSON.stringify({
-                        model: MODEL,
+                        model: selectedModel, // Usar el modelo seleccionado del desplegable
                         messages: [
-                            { role: "user", content: fullPrompt }
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: userPrompt }
                         ],
                         max_tokens: maxTokens,
-                        // Otros parámetros opcionales: temperature, top_p, etc.
+                        // Se pueden añadir otros parámetros como temperature, top_p, etc.
                         // temperature: 0.7,
                     })
                 });
 
+                // 6. Manejo de la Respuesta
                 if (!response.ok) {
-                    // Intentar obtener más detalles del error si es posible
+                    // Intentar obtener detalles del error del cuerpo de la respuesta
                     let errorData;
                     try {
                         errorData = await response.json();
                     } catch (e) {
-                        // Si el cuerpo del error no es JSON válido
-                        throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+                        errorData = { message: response.statusText }; // Usar texto de estado si no hay JSON
                     }
-
-                    console.error('API Error Data:', errorData);
-                    const errorCode = errorData?.error?.code;
-                    const errorMessage = errorData?.error?.message || `Error HTTP ${response.status}`;
-
-                    if (errorCode === 'invalid_api_key' || response.status === 401) {
-                         throw new Error('Clave API inválida o no autorizada. Verifica tu clave.');
-                    } else if (errorCode === 'rate_limit_exceeded' || response.status === 429) {
-                         throw new Error('Límite de solicitudes excedido. Inténtalo más tarde.');
-                    } else {
-                        throw new Error(errorMessage);
-                    }
+                    // Construir mensaje de error detallado
+                    const errorMsg = `Error ${response.status}: ${errorData?.error?.message || errorData.message || 'Error desconocido de la API'}`;
+                    console.error("API Error Data:", errorData); // Loguear detalles para depuración
+                    throw new Error(errorMsg); // Lanzar error para ser capturado por el catch
                 }
 
+                // Si la respuesta es OK (2xx)
                 const data = await response.json();
 
-                if (data.choices && data.choices.length > 0 && data.choices[0].message?.content) {
-                    const generatedText = data.choices[0].message.content.trim();
-                    const finishReason = data.choices[0].finish_reason;
+                // Extraer el texto generado y la razón de finalización
+                const generatedText = data.choices?.[0]?.message?.content?.trim();
+                const finishReason = data.choices?.[0]?.finish_reason; // e.g., 'stop', 'length'
 
-                    // Añadir al área de resultado (con separador si ya hay texto)
-                    const separator = resultEl.value ? '\n\n---\n\n' : '';
-                    resultEl.value += separator + generatedText;
+                if (generatedText) {
+                    // 7. Actualizar UI y Guardar en Historial
+                    updateResultDisplay(generatedText); // Añadir texto al área de resultado
 
-                    // Sugerencia: Hacer scroll al final del textarea
-                    resultEl.scrollTop = resultEl.scrollHeight;
-
-
-                    // Guardar en el historial
                     addToHistory({
-                        prompt: prompt, // Guardar el prompt original del usuario
+                        prompt: prompt,
                         result: generatedText,
+                        model: selectedModel, // Guardar el modelo que se usó
                         style: style,
                         language: language,
-                        length: length, // Longitud solicitada
+                        length: requestedLength,
                         timestamp: new Date().toISOString(),
-                        finish_reason: finishReason,
-                        model: MODEL // Guardar el modelo usado
+                        finish_reason: finishReason // Guardar por qué terminó
                     });
 
-                    // Habilitar botones de resultado
-                    copyResultBtn.disabled = false;
-                    exportBtn.disabled = false;
-                    clearResultBtn.disabled = false;
-
-                    // Mostrar advertencia si el texto fue truncado
+                    // Mostrar advertencia si la generación fue truncada
                     if (finishReason === 'length' || finishReason === 'max_tokens') {
-                        showWarning('La respuesta puede haber sido truncada porque alcanzó la longitud máxima solicitada o el límite de tokens.');
+                         showWarning(`La generación puede haberse detenido antes de completarse debido al límite de longitud (max_tokens: ${maxTokens}). Considera usar un prompt más corto o ajustar la longitud deseada.`);
+                    } else {
+                         hideMessage('warning'); // Ocultar advertencias si la generación fue normal
                     }
+                    hideMessage('error'); // Ocultar errores si la generación fue exitosa
 
                 } else {
-                    console.error('Respuesta inesperada de la API:', data);
-                    throw new Error('La API devolvió una respuesta inesperada o vacía.');
+                    // Caso raro donde la respuesta es OK pero no hay texto
+                    throw new Error("La respuesta de la API fue exitosa pero no contenía texto generado.");
                 }
 
             } catch (error) {
+                // 8. Manejo de Errores (de red o de la API)
                 console.error('Error durante la generación:', error);
-                showError(error.message || 'Ocurrió un error desconocido durante la generación.');
+                showError(error.message || "Ocurrió un error inesperado al contactar la API.");
             } finally {
-                showLoading(false); // Asegurar que el estado de carga se desactive
+                // 9. Finalizar Estado de Carga (siempre se ejecuta)
+                showLoading(false);
             }
         }
 
-        // --- Inicialización ---
+        // --- Asignación de Event Listeners ---
+        lengthEl.addEventListener('input', updateLengthDisplay); // Actualizar valor de longitud al mover slider
+        generateBtn.addEventListener('click', generateText); // Generar texto al hacer clic
+        saveKeyBtn.addEventListener('click', saveApiKey); // Guardar clave
+        clearKeyBtn.addEventListener('click', clearApiKey); // Borrar clave
+        copyResultBtn.addEventListener('click', copyResultText); // Copiar resultado
+        exportBtn.addEventListener('click', exportResultAsTxt); // Exportar resultado
+        clearResultBtn.addEventListener('click', clearResultArea); // Limpiar resultado
+        clearHistoryBtn.addEventListener('click', clearHistory); // Limpiar historial
+        modelSelectEl.addEventListener('change', updateGenerateButtonState); // Actualizar botón al cambiar modelo
+
+        // --- Inicialización al Cargar la Página ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Cargar clave API y historial al iniciar
-            loadApiKey();
-            loadHistory();
+            loadApiKey(); // Cargar clave API si existe
+            loadHistory(); // Cargar y mostrar historial
             updateLengthDisplay(); // Mostrar valor inicial del slider
-
-            // Listeners para botones y controles
-            saveKeyBtn.addEventListener('click', saveApiKey);
-            clearKeyBtn.addEventListener('click', clearApiKey);
-            apiKeyInput.addEventListener('keypress', (e) => { // Guardar con Enter en el input de clave
-                 if (e.key === 'Enter') {
-                     saveApiKey();
-                 }
-            });
-
-            lengthEl.addEventListener('input', updateLengthDisplay); // Actualizar valor del slider en tiempo real
-            generateBtn.addEventListener('click', generateText);
-
-            copyResultBtn.addEventListener('click', copyResultText);
-            exportBtn.addEventListener('click', exportText);
-            clearResultBtn.addEventListener('click', clearResultArea);
-
-            clearHistoryBtn.addEventListener('click', clearHistory);
-
-            // Habilitar/deshabilitar botones de resultado basado en si hay contenido al cargar
-             const initialResultContent = !!resultEl.value;
-             copyResultBtn.disabled = !initialResultContent;
-             exportBtn.disabled = !initialResultContent;
-             clearResultBtn.disabled = !initialResultContent;
-
+            updateResultButtonsState(); // Establecer estado inicial de botones de resultado
+            updateHistoryButtonsState(); // Establecer estado inicial de botones de historial
+            updateGenerateButtonState(); // Establecer estado inicial del botón generar
         });
 
     </script>
